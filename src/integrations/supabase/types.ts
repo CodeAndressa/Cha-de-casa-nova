@@ -14,16 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      event_settings: {
+        Row: {
+          address: string | null
+          city: string | null
+          complement: string | null
+          cover_image_url: string | null
+          created_at: string
+          event_date: string | null
+          event_time: string | null
+          id: string
+          name: string
+          pix_key: string | null
+          pix_owner: string | null
+          pix_qr_url: string | null
+          state: string | null
+          updated_at: string
+          welcome_text: string | null
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          complement?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          name?: string
+          pix_key?: string | null
+          pix_owner?: string | null
+          pix_qr_url?: string | null
+          state?: string | null
+          updated_at?: string
+          welcome_text?: string | null
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          complement?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          name?: string
+          pix_key?: string | null
+          pix_owner?: string | null
+          pix_qr_url?: string | null
+          state?: string | null
+          updated_at?: string
+          welcome_text?: string | null
+          whatsapp_phone?: string | null
+        }
+        Relationships: []
+      }
+      gift_reservations: {
+        Row: {
+          created_at: string
+          gift_id: string
+          guest_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["gift_status"]
+        }
+        Insert: {
+          created_at?: string
+          gift_id: string
+          guest_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["gift_status"]
+        }
+        Update: {
+          created_at?: string
+          gift_id?: string
+          guest_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["gift_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_reservations_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gifts: {
+        Row: {
+          category: Database["public"]["Enums"]["gift_category"]
+          created_at: string
+          description: string | null
+          estimated_value: number | null
+          external_link: string | null
+          id: string
+          image_url: string | null
+          name: string
+          quantity: number
+          sort_order: number
+          status: Database["public"]["Enums"]["gift_status"]
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["gift_category"]
+          created_at?: string
+          description?: string | null
+          estimated_value?: number | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          quantity?: number
+          sort_order?: number
+          status?: Database["public"]["Enums"]["gift_status"]
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["gift_category"]
+          created_at?: string
+          description?: string | null
+          estimated_value?: number | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          quantity?: number
+          sort_order?: number
+          status?: Database["public"]["Enums"]["gift_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guest_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      rsvps: {
+        Row: {
+          created_at: string
+          guests_count: number
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          guests_count?: number
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          guests_count?: number
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      reserve_gift: {
+        Args: {
+          _gift_id: string
+          _guest_name: string
+          _message: string
+          _phone: string
+          _status: Database["public"]["Enums"]["gift_status"]
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      gift_category:
+        | "cozinha"
+        | "banheiro"
+        | "lavanderia"
+        | "sala"
+        | "quarto"
+        | "decoracao"
+        | "utilidades"
+        | "outros"
+      gift_status: "disponivel" | "reservado" | "presenteado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +384,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      gift_category: [
+        "cozinha",
+        "banheiro",
+        "lavanderia",
+        "sala",
+        "quarto",
+        "decoracao",
+        "utilidades",
+        "outros",
+      ],
+      gift_status: ["disponivel", "reservado", "presenteado"],
+    },
   },
 } as const
