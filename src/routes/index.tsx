@@ -345,8 +345,8 @@ function ReserveDialog({ gift, onClose, onSuccess }: { gift: Gift | null; onClos
       const { error } = await supabase.rpc("reserve_gift", {
         _gift_id: gift.id,
         _guest_name: name.trim(),
-        _phone: phone.trim() || null,
-        _message: message.trim() || null,
+        _phone: phone.trim() || "",
+        _message: message.trim() || "",
         _status: status,
       });
       if (error) throw error;

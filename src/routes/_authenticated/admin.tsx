@@ -268,8 +268,10 @@ function EventTab() {
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!current?.id) return;
-      const { error } = await supabase.from("event_settings").update(current).eq("id", current.id);
+      const id = (current as any)?.id as string | undefined;
+      if (!id) return;
+      const { id: _omit, created_at: _c, updated_at: _u, ...payload } = current as any;
+      const { error } = await supabase.from("event_settings").update(payload).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Evento atualizado!"); qc.invalidateQueries({ queryKey: ["admin-event"] }); qc.invalidateQueries({ queryKey: ["event-settings"] }); },
