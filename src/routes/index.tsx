@@ -255,6 +255,9 @@ function PublicPage() {
         </section>
       )}
 
+      {/* Photo gallery */}
+      <PhotoGallery />
+
       {/* Message */}
       <MessageSection />
 
@@ -456,6 +459,43 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PhotoGallery() {
+  const { data: photos = [] } = useQuery({
+    queryKey: ["couple-photos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("couple_photos").select("*").order("sort_order").order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  if (photos.length === 0) return null;
+  const tilts = ["-rotate-2", "rotate-1", "rotate-2", "-rotate-1", "rotate-0", "-rotate-2"];
+  return (
+    <section className="bg-forest/5 py-16">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-terracotta">Nossa história</p>
+          <h2 className="mt-3 font-display text-3xl text-foreground sm:text-4xl">Momentos do casal</h2>
+        </div>
+        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {(photos as { id: string; image_url: string; caption: string | null }[]).map((p, i) => (
+            <div key={p.id} className={`${tilts[i % tilts.length]} transition-transform hover:rotate-0 hover:scale-[1.02]`}>
+              <div className="rounded-[2px] bg-card p-3 pb-10 shadow-card ring-1 ring-border">
+                <div className="aspect-[4/5] overflow-hidden rounded-[2px] bg-secondary">
+                  <img src={p.image_url} alt={p.caption ?? ""} loading="lazy" className="h-full w-full object-cover" />
+                </div>
+                {p.caption && (
+                  <p className="mt-3 text-center font-display text-sm italic text-foreground/80">{p.caption}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

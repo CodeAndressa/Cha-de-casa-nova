@@ -1,8 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LogOut, Plus, Pencil, Trash2, Home, ExternalLink } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Home, GripVertical, Image as ImageIcon } from "lucide-react";
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +33,7 @@ type Gift = {
   estimated_value: number | null; image_url: string | null; external_link: string | null;
   quantity: number; status: GiftStatus; sort_order: number;
 };
+type CouplePhoto = { id: string; image_url: string; caption: string | null; sort_order: number };
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -54,15 +63,17 @@ function AdminPage() {
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         <Tabs defaultValue="dashboard">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="gifts">Presentes</TabsTrigger>
+            <TabsTrigger value="photos">Fotos</TabsTrigger>
             <TabsTrigger value="event">Evento</TabsTrigger>
             <TabsTrigger value="rsvps">Confirmados</TabsTrigger>
             <TabsTrigger value="messages">Mensagens</TabsTrigger>
           </TabsList>
           <TabsContent value="dashboard" className="mt-6"><Dashboard /></TabsContent>
           <TabsContent value="gifts" className="mt-6"><GiftsTab /></TabsContent>
+          <TabsContent value="photos" className="mt-6"><PhotosTab /></TabsContent>
           <TabsContent value="event" className="mt-6"><EventTab /></TabsContent>
           <TabsContent value="rsvps" className="mt-6"><RsvpsTab /></TabsContent>
           <TabsContent value="messages" className="mt-6"><MessagesTab /></TabsContent>
@@ -111,6 +122,7 @@ function Dashboard() {
 function GiftsTab() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Gift> | null>(null);
+  const [localOrder, setLocalOrder] = useState<Gift[] | null>(null);
 
   const { data: gifts = [] } = useQuery({
     queryKey: ["admin-gifts-full"],
@@ -121,6 +133,8 @@ function GiftsTab() {
     },
   });
 
+  const items = localOrder ?? gifts;
+
   const del = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("gifts").delete().eq("id", id);
@@ -129,42 +143,105 @@ function GiftsTab() {
     onSuccess: () => { toast.success("Presente removido"); qc.invalidateQueries({ queryKey: ["admin-gifts-full"] }); },
   });
 
+  const reorder = useMutation({
+    mutationFn: async (ordered: Gift[]) => {
+      // update each row's sort_order
+      await Promise.all(ordered.map((g, i) =>
+        supabase.from("gifts").update({ sort_order: i }).eq("id", g.id)
+      ));
+    },
+    onSuccess: () => {
+      toast.success("Ordem salva");
+      qc.invalidateQueries({ queryKey: ["admin-gifts-full"] });
+      qc.invalidateQueries({ queryKey: ["gifts"] });
+      setLocalOrder(null);
+    },
+    onError: (e: Error) => { toast.error(e.message); setLocalOrder(null); },
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = items.findIndex((g) => g.id === active.id);
+    const newIdx = items.findIndex((g) => g.id === over.id);
+    const next = arrayMove(items, oldIdx, newIdx);
+    setLocalOrder(next);
+    reorder.mutate(next);
+  };
+
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Arraste pelo <GripVertical className="inline h-3 w-3" /> para reordenar.</p>
         <Button onClick={() => setEditing({ name: "", category: "outros", quantity: 1, status: "disponivel" })} className="rounded-full">
           <Plus className="mr-2 h-4 w-4" /> Novo presente
         </Button>
       </div>
-      <div className="grid gap-3">
-        {gifts.map((g) => (
-          <Card key={g.id} className="flex items-center gap-4 rounded-2xl p-4">
-            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-secondary">
-              {g.image_url && <img src={g.image_url} alt="" className="h-full w-full object-cover" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="truncate font-medium">{g.name}</h3>
-                <Badge variant="secondary">{categoryLabel(g.category)}</Badge>
-                <Badge className={
-                  g.status === "disponivel" ? "bg-olive text-olive-foreground"
-                  : g.status === "reservado" ? "bg-accent text-accent-foreground"
-                  : "bg-terracotta text-terracotta-foreground"
-                }>{statusLabel(g.status)}</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{formatBRL(g.estimated_value)} · qtd {g.quantity}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button size="icon" variant="outline" onClick={() => setEditing(g)}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="outline" onClick={() => confirm("Excluir?") && del.mutate(g.id)}><Trash2 className="h-4 w-4" /></Button>
-            </div>
-          </Card>
-        ))}
-        {gifts.length === 0 && <p className="text-center text-sm text-muted-foreground">Nenhum presente cadastrado.</p>}
-      </div>
 
-      <GiftFormDialog gift={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["admin-gifts-full"] }); qc.invalidateQueries({ queryKey: ["gifts"] }); }} />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={items.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+          <div className="grid gap-3">
+            {items.map((g) => (
+              <SortableGiftRow key={g.id} gift={g} onEdit={() => setEditing(g)} onDelete={() => { if (confirm("Excluir?")) del.mutate(g.id); }} />
+            ))}
+            {items.length === 0 && <p className="text-center text-sm text-muted-foreground">Nenhum presente cadastrado.</p>}
+          </div>
+        </SortableContext>
+      </DndContext>
+
+      <GiftFormDialog
+        gift={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          qc.invalidateQueries({ queryKey: ["admin-gifts-full"] });
+          qc.invalidateQueries({ queryKey: ["gifts"] });
+        }}
+      />
     </div>
+  );
+}
+
+function SortableGiftRow({ gift: g, onEdit, onDelete }: { gift: Gift; onEdit: () => void; onDelete: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: g.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="flex items-center gap-3 rounded-2xl p-4">
+      <button
+        type="button"
+        className="cursor-grab touch-none rounded-md p-1 text-muted-foreground hover:bg-secondary active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+        aria-label="Arrastar"
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-secondary">
+        {g.image_url && <img src={g.image_url} alt="" className="h-full w-full object-cover" />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="truncate font-medium">{g.name}</h3>
+          <Badge variant="secondary">{categoryLabel(g.category)}</Badge>
+          <Badge className={
+            g.status === "disponivel" ? "bg-olive text-olive-foreground"
+            : g.status === "reservado" ? "bg-accent text-accent-foreground"
+            : "bg-terracotta text-terracotta-foreground"
+          }>{statusLabel(g.status)}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">{formatBRL(g.estimated_value)} · qtd {g.quantity}</p>
+      </div>
+      <div className="flex gap-2">
+        <Button size="icon" variant="outline" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
+        <Button size="icon" variant="outline" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
+      </div>
+    </Card>
   );
 }
 
@@ -172,11 +249,9 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
   const isOpen = !!gift;
   const [form, setForm] = useState<Partial<Gift>>({});
 
-  // sync when opens
-  if (gift && form !== gift && (!form.id || form.id !== gift.id)) {
-    // initialize once per gift open
-    setTimeout(() => setForm(gift), 0);
-  }
+  useEffect(() => {
+    if (gift) setForm(gift);
+  }, [gift]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -251,6 +326,145 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PhotosTab() {
+  const qc = useQueryClient();
+  const FRAME_COUNT = 6;
+
+  const { data: photos = [] } = useQuery({
+    queryKey: ["admin-photos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("couple_photos").select("*").order("sort_order").order("created_at");
+      if (error) throw error;
+      return (data ?? []) as CouplePhoto[];
+    },
+  });
+
+  const [editing, setEditing] = useState<Partial<CouplePhoto> | null>(null);
+  const [form, setForm] = useState<Partial<CouplePhoto>>({});
+  useEffect(() => { if (editing) setForm(editing); }, [editing]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!form.image_url?.trim()) throw new Error("Informe a URL da imagem");
+      if (form.id) {
+        const { error } = await supabase.from("couple_photos").update({
+          image_url: form.image_url, caption: form.caption ?? null,
+        }).eq("id", form.id);
+        if (error) throw error;
+      } else {
+        const nextOrder = photos.length;
+        const { error } = await supabase.from("couple_photos").insert({
+          image_url: form.image_url, caption: form.caption ?? null, sort_order: nextOrder,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Foto salva!");
+      qc.invalidateQueries({ queryKey: ["admin-photos"] });
+      qc.invalidateQueries({ queryKey: ["couple-photos"] });
+      setEditing(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("couple_photos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Foto removida");
+      qc.invalidateQueries({ queryKey: ["admin-photos"] });
+      qc.invalidateQueries({ queryKey: ["couple-photos"] });
+    },
+  });
+
+  // Build slot array: existing photos + empty frame placeholders
+  const slots = Math.max(FRAME_COUNT, photos.length + 1);
+  const tilts = ["-rotate-2", "rotate-1", "rotate-2", "-rotate-1", "rotate-0", "-rotate-2"];
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="font-display text-2xl">Galeria do casal</h2>
+        <p className="text-sm text-muted-foreground">Clique em uma moldura vazia para adicionar uma foto. As fotos aparecem no site público.</p>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: slots }).map((_, i) => {
+          const p = photos[i];
+          const tilt = tilts[i % tilts.length];
+          return (
+            <div key={p?.id ?? `empty-${i}`} className={`group relative ${tilt} transition-transform hover:rotate-0 hover:scale-[1.02]`}>
+              <div className="rounded-[2px] bg-card p-3 pb-10 shadow-card ring-1 ring-border">
+                <div className="aspect-[4/5] overflow-hidden rounded-[2px] bg-secondary">
+                  {p?.image_url ? (
+                    <img src={p.image_url} alt={p.caption ?? ""} className="h-full w-full object-cover" />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ image_url: "", caption: "" })}
+                      className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground/60 transition-colors hover:bg-accent/40 hover:text-forest"
+                    >
+                      <ImageIcon className="h-10 w-10" />
+                      <span className="text-xs uppercase tracking-widest">Adicionar foto</span>
+                    </button>
+                  )}
+                </div>
+                {p?.caption && (
+                  <p className="mt-3 text-center font-display text-sm italic text-foreground/80">{p.caption}</p>
+                )}
+              </div>
+              {p && (
+                <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => setEditing(p)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => { if (confirm("Remover esta foto?")) del.mutate(p.id); }}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{form.id ? "Editar" : "Nova"} foto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>URL da imagem</Label>
+              <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+            </div>
+            <div>
+              <Label>Legenda (opcional)</Label>
+              <Input value={form.caption ?? ""} onChange={(e) => setForm({ ...form, caption: e.target.value })} placeholder="Nossa viagem..." />
+            </div>
+            {form.image_url && (
+              <div className="mx-auto w-40">
+                <div className="rounded-[2px] bg-card p-2 pb-6 shadow-card ring-1 ring-border">
+                  <div className="aspect-[4/5] overflow-hidden bg-secondary">
+                    <img src={form.image_url} alt="" className="h-full w-full object-cover" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
