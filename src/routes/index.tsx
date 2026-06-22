@@ -17,7 +17,7 @@ import {
   ShoppingCart,
   UtensilsCrossed,
   Leaf,
-  Film,
+  Flame,
   Ruler,
 } from "lucide-react";
 
@@ -67,7 +67,7 @@ const PIX_TIERS: PixTier[] = [
   { id: "despensa",  icon: ShoppingCart,    value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
   { id: "jantar",   icon: UtensilsCrossed,  value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
   { id: "decoracao",icon: Leaf,             value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
-  { id: "cinema",   icon: Film,             value: 200, label: "Noite de filmes",    description: "Pipoca, manta e primeira maratona na casa nova" },
+  { id: "churras",  icon: Flame,            value: 200, label: "Noite de churras",   description: "Jogo do Coxa na TV, cerveja gelada e churrasqueira ligada" },
   { id: "moveis",   icon: Ruler,            value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
 ];
 
