@@ -50,6 +50,24 @@ function parseGiftLinks(external_link: string | null): { label: string; url: str
   return [{ label: "Ver produto", url: external_link }];
 }
 
+type PixTier = { id: string; emoji: string; value: number; label: string; description: string };
+
+const PIX_TIERS: PixTier[] = [
+  { id: "despensa",  emoji: "🛒", value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
+  { id: "jantar",   emoji: "🍽️", value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
+  { id: "decoracao",emoji: "🌿", value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
+  { id: "cafe",     emoji: "☕", value: 200, label: "Cantinho do café",   description: "O cantinho do café dos nossos sonhos" },
+  { id: "moveis",   emoji: "🛋️", value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
+];
+
+const TIER_GRADIENTS = [
+  "from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]",
+  "from-[oklch(0.34_0.11_145)] to-[oklch(0.22_0.08_152)]",
+  "from-[oklch(0.43_0.14_148)] to-[oklch(0.28_0.10_155)]",
+  "from-[oklch(0.31_0.10_138)] to-[oklch(0.20_0.08_150)]",
+  "from-[oklch(0.26_0.13_157)] to-[oklch(0.17_0.11_163)]",
+];
+
 const OPEN_HOUSE_DATE = "2026-08-08";
 const OPEN_HOUSE_TIME = "15:00";
 const OPEN_HOUSE_FALLBACK_TEXT =
@@ -194,6 +212,7 @@ function PublicPage() {
   const [reserveGift, setReserveGift] = useState<Gift | null>(null);
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
   const pixSectionRef = useRef<HTMLDivElement>(null);
 
   const isPixCota = (g: Gift) => !!g.description?.toLowerCase().startsWith("cota pix");
@@ -354,58 +373,67 @@ function PublicPage() {
             </div>
           </section>
 
+          {/* ── COTAS PIX ── */}
+          <section ref={pixSectionRef} className="px-5 pb-8 sm:px-8">
+            <div className="mx-auto max-w-5xl">
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/45">
+                Contribuições via Pix
+              </p>
+              <h2 className="mt-2 text-center font-display text-4xl text-white sm:text-5xl">
+                Ajude a montar o nosso lar
+              </h2>
+              <p className="mt-2 text-center text-sm text-white/55">
+                Escolha uma ideia e contribua com o valor que quiser
+              </p>
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {PIX_TIERS.map((tier, i) => (
+                  <PixTierCard key={tier.id} tier={tier} index={i} onClick={() => setSelectedTier(tier)} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── CHAVE PIX (outro valor) ── */}
           {(event?.pix_key || event?.pix_qr_url) && (
-            <section ref={pixSectionRef} className="px-5 pb-16 sm:px-8">
-              <div className="mx-auto max-w-4xl rounded-2xl border border-moss/30 bg-[oklch(0.26_0.10_156)] p-6 text-forest-foreground shadow-premium sm:p-8">
-                <div className="grid gap-7 md:grid-cols-[0.9fr_1.1fr] md:items-center">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-white/55">
-                      Contribuir via Pix
-                    </p>
-                    <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
-                      Um mimo para o novo lar
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-white/65">
-                      Se preferir, você também pode contribuir por Pix de forma simples.
-                    </p>
-                  </div>
-                  <div className="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
-                    {event?.pix_qr_url && (
-                      <img
-                        src={event.pix_qr_url}
-                        alt="QR Code Pix"
-                        className="mx-auto h-40 w-40 rounded-xl border border-white/20 bg-white p-2"
-                      />
+            <section className="px-5 pb-16 sm:px-8">
+              <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-white/6 px-6 py-5 backdrop-blur-sm sm:px-8">
+                <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-white/40">
+                  Ou envie o valor que preferir
+                </p>
+                <div className="flex flex-wrap items-center gap-5">
+                  {event?.pix_qr_url && (
+                    <img
+                      src={event.pix_qr_url}
+                      alt="QR Code Pix"
+                      className="h-28 w-28 rounded-xl border border-white/20 bg-white p-1.5"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1 space-y-3">
+                    {event?.pix_owner && (
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-white/40">Titular</p>
+                        <p className="text-sm font-medium text-white/80">{event.pix_owner}</p>
+                      </div>
                     )}
-                    <div className="min-w-0 space-y-4">
-                      {event?.pix_owner && (
-                        <div>
-                          <p className="text-xs uppercase tracking-widest text-white/50">Titular</p>
-                          <p className="font-medium text-white">{event.pix_owner}</p>
+                    {event?.pix_key && (
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-white/40">Chave Pix</p>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <code className="flex-1 truncate rounded-xl border border-white/15 bg-white/8 px-3 py-2 text-sm text-white/80">
+                            {event.pix_key}
+                          </code>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={copyPix}
+                            aria-label="Copiar chave Pix"
+                            className="rounded-xl"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-                      {event?.pix_key && (
-                        <div>
-                          <p className="text-xs uppercase tracking-widest text-white/50">
-                            Chave Pix
-                          </p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <code className="flex-1 truncate rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white">
-                              {event.pix_key}
-                            </code>
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              onClick={copyPix}
-                              aria-label="Copiar chave Pix"
-                              className="rounded-xl"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -436,6 +464,12 @@ function PublicPage() {
           qc.invalidateQueries({ queryKey: ["gifts"] });
           setReserveGift(null);
         }}
+      />
+      <PixTierDialog
+        tier={selectedTier}
+        pixKey={event?.pix_key ?? null}
+        pixOwner={event?.pix_owner ?? null}
+        onClose={() => setSelectedTier(null)}
       />
       <RsvpDialog open={rsvpOpen} onOpenChange={setRsvpOpen} />
       <AddressDialog
@@ -685,6 +719,131 @@ function GiftCard({ gift, onReserve, hideDescription }: { gift: Gift; onReserve:
         )}
       </div>
     </Card>
+  );
+}
+
+function PixTierCard({ tier, index, onClick }: { tier: PixTier; index: number; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-2xl border border-white/15 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-white/35 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${TIER_GRADIENTS[index]}`} />
+      <div className="relative flex h-full flex-col p-5">
+        <span className="text-4xl leading-none">{tier.emoji}</span>
+        <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
+          {formatBRL(tier.value)}
+        </span>
+        <h3 className="mt-2 font-display text-xl leading-tight text-white">{tier.label}</h3>
+        <p className="mt-1.5 text-[11px] leading-5 text-white/60">{tier.description}</p>
+        <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
+          <Heart className="h-3 w-3" />
+          Contribuir
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function PixTierDialog({
+  tier,
+  pixKey,
+  pixOwner,
+  onClose,
+}: {
+  tier: PixTier | null;
+  pixKey: string | null;
+  pixOwner: string | null;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const copyKey = async () => {
+    if (!pixKey) return;
+    await navigator.clipboard.writeText(pixKey);
+    setCopied(true);
+    toast.success("Chave Pix copiada!");
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!isSupabaseConfigured) throw new Error("Supabase não configurado.");
+      if (!tier) return;
+      const { error } = await supabase.from("guest_messages").insert({
+        name: name.trim(),
+        message: `Contribuição Pix – ${tier.label} (${formatBRL(tier.value)})`,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Que mimo! Obrigada de coração 💚");
+      setName("");
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message || "Não foi possível registrar"),
+  });
+
+  return (
+    <Dialog open={!!tier} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <span className="text-5xl leading-none">{tier?.emoji}</span>
+          <DialogTitle className="mt-3 font-display text-3xl">{tier?.label}</DialogTitle>
+          <DialogDescription className="text-sm leading-6">{tier?.description}</DialogDescription>
+        </DialogHeader>
+
+        <div className="rounded-2xl border border-forest/20 bg-gradient-to-br from-secondary to-sand px-5 py-4 text-center">
+          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
+            Valor sugerido
+          </p>
+          <p className="mt-1 font-display text-4xl text-forest">{formatBRL(tier?.value ?? null)}</p>
+        </div>
+
+        {pixKey && (
+          <div>
+            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+              Chave Pix
+            </p>
+            <div className="flex gap-2">
+              <code className="flex-1 truncate rounded-xl border bg-secondary px-3 py-2 text-sm">
+                {pixKey}
+              </code>
+              <Button size="icon" variant="outline" onClick={copyKey} className="shrink-0 rounded-xl">
+                {copied ? <Check className="h-4 w-4 text-moss" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            {pixOwner && (
+              <p className="mt-1 text-xs text-muted-foreground">Titular: {pixOwner}</p>
+            )}
+          </div>
+        )}
+
+        <div>
+          <Label htmlFor="pix-name">Seu nome</Label>
+          <Input
+            id="pix-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Para sabermos quem mandou o carinho"
+            maxLength={100}
+          />
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!name.trim() || mutation.isPending}
+          >
+            <Heart className="mr-2 h-4 w-4" />
+            Vou presentear assim!
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
