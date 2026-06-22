@@ -554,24 +554,20 @@ function SubNav({ title, onBack }: { title: string; onBack: () => void }) {
 
 function MiniFooter({ whatsappPhone }: { whatsappPhone?: string | null }) {
   return (
-    <footer className="mx-auto max-w-7xl px-5 pb-10 pt-2 text-center sm:px-8">
-      <div className="rounded-2xl border border-white/20 bg-white/92 px-5 py-6 shadow-premium backdrop-blur-xl">
-        {whatsappPhone && (
-          <Button asChild variant="outline" className="rounded-xl border-forest/15 bg-white/70">
-            <a
-              href={`https://wa.me/${whatsappPhone.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <MessageCircle className="mr-2 h-4 w-4" /> Falar no WhatsApp
-            </a>
-          </Button>
-        )}
-        <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-foreground/60">
-          Feito com <Heart className="h-3.5 w-3.5 fill-terracotta text-terracotta" /> para o nosso
-          novo lar
-        </p>
-      </div>
+    <footer className="px-5 pb-10 pt-4 text-center sm:px-8">
+      {whatsappPhone && (
+        <a
+          href={`https://wa.me/${whatsappPhone.replace(/\D/g, "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-5 py-2.5 text-sm font-medium text-white/65 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/14 hover:text-white"
+        >
+          <MessageCircle className="h-4 w-4" /> Falar no WhatsApp
+        </a>
+      )}
+      <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-white/30">
+        Feito com <Heart className="h-3 w-3 fill-white/30 text-white/30" /> para o nosso novo lar
+      </p>
     </footer>
   );
 }
