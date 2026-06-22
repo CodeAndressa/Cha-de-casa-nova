@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
+import openHouseBorder from "@/assets/open-house-border.png";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,14 @@ import {
   statusLabel,
 } from "@/lib/categories";
 import { useCountdown } from "@/hooks/use-countdown";
+
+const localBackgroundPhotoUrls = Object.values(
+  import.meta.glob<string>("/src/assets/background-photos/*.{jpg,jpeg,png,webp,avif}", {
+    eager: true,
+    query: "?url",
+    import: "default",
+  }),
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -176,7 +185,11 @@ function PublicPage() {
 
   return (
     <div className="relative min-h-screen isolate overflow-hidden bg-background text-foreground">
-      <FloatingPhotoBackground photos={photos} fallback={event?.cover_image_url || coverImg} />
+      <FloatingPhotoBackground
+        photos={photos}
+        localPhotos={localBackgroundPhotoUrls}
+        fallback={event?.cover_image_url || coverImg}
+      />
       <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(circle_at_20%_10%,oklch(0.92_0.05_115_/_0.58),transparent_34%),linear-gradient(180deg,oklch(0.98_0.018_118_/_0.82),oklch(0.94_0.025_122_/_0.76)_48%,oklch(0.98_0.012_105_/_0.86))]" />
 
       <main className="relative z-10">
@@ -263,17 +276,37 @@ function PublicPage() {
             </div>
 
             <aside className="rounded-lg border border-white/70 bg-white/58 p-4 shadow-premium backdrop-blur-2xl sm:p-5">
-              <div className="relative overflow-hidden rounded-lg">
+              <div className="open-house-invite relative isolate flex aspect-[4/5] min-h-[560px] overflow-hidden rounded-lg border border-forest/10 bg-[#f8f2e7] px-8 py-10 text-center shadow-card sm:px-10">
                 <img
-                  src={event?.cover_image_url || coverImg}
-                  alt="Foto do casal"
-                  width={900}
-                  height={1100}
-                  className="aspect-[4/5] w-full object-cover"
+                  src={openHouseBorder}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 h-full w-full object-cover opacity-95"
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest/80 to-transparent p-5 text-white">
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/75">Novo lar</p>
-                  <p className="mt-2 font-display text-3xl">Memórias, afeto e casa cheia</p>
+                <div className="m-auto w-full max-w-sm">
+                  <p className="font-sans text-5xl font-semibold uppercase tracking-[0.02em] text-black sm:text-6xl">
+                    Open House
+                  </p>
+                  <p className="mt-4 font-sans text-3xl font-semibold uppercase tracking-[0.08em] text-black sm:text-4xl">
+                    {event?.name ?? "Casa Nova"}
+                  </p>
+                  <div className="my-9 h-px w-full bg-black" />
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-sans text-xl uppercase tracking-[0.04em] text-black sm:text-2xl">
+                    {event?.event_date && (
+                      <span>
+                        {new Date(`${event.event_date}T00:00:00`).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "short",
+                        })}
+                      </span>
+                    )}
+                    {event?.event_date && <span>?</span>}
+                    <span>{event?.event_time ? event.event_time.slice(0, 5) : "15:00"}</span>
+                  </div>
+                  <div className="my-9 h-px w-full bg-black" />
+                  <p className="mx-auto max-w-xs font-sans text-base font-medium uppercase leading-7 tracking-[0.02em] text-black sm:text-lg">
+                    {fullAddress || "Endereco do open house"}
+                  </p>
                 </div>
               </div>
 
@@ -463,20 +496,27 @@ function PublicPage() {
 
 function FloatingPhotoBackground({
   photos,
+  localPhotos,
   fallback,
 }: {
   photos: CouplePhoto[];
+  localPhotos: string[];
   fallback: string;
 }) {
-  const backgroundPhotos =
-    photos.length > 0 ? photos : [{ id: "fallback", image_url: fallback, caption: null }];
-  const items = backgroundPhotos.slice(0, 9);
+  const remotePhotoUrls = photos.map((photo) => photo.image_url).filter(Boolean);
+  const photoUrls = [...localPhotos, ...remotePhotoUrls];
+  const sourceUrls = photoUrls.length > 0 ? photoUrls : Array.from({ length: 9 }, () => fallback);
+  const itemCount = Math.min(9, Math.max(6, sourceUrls.length));
+  const items = Array.from(
+    { length: itemCount },
+    (_, index) => sourceUrls[index % sourceUrls.length],
+  );
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      {items.map((photo, index) => (
-        <div key={`${photo.id}-${index}`} className={`floating-photo floating-photo-${index + 1}`}>
-          <img src={photo.image_url} alt="" className="h-full w-full object-cover" />
+      {items.map((url, index) => (
+        <div key={`${url}-${index}`} className={`floating-photo floating-photo-${index + 1}`}>
+          <img src={url} alt="" className="h-full w-full object-cover" />
         </div>
       ))}
     </div>
