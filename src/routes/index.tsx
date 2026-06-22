@@ -11,11 +11,9 @@ import {
   Heart,
   Gift as GiftIcon,
   Check,
-  Sparkles,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
-import openHouseBorder from "@/assets/open-house-border.png";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +38,12 @@ import {
   statusLabel,
 } from "@/lib/categories";
 import { useCountdown } from "@/hooks/use-countdown";
+
+const OPEN_HOUSE_TITLE = "Open House da Dani e Andressa";
+const OPEN_HOUSE_DATE = "2026-08-08";
+const OPEN_HOUSE_TIME = "15:00";
+const OPEN_HOUSE_FALLBACK_TEXT =
+  "Casa aberta para celebrar o novo lar, receber pessoas queridas e brindar essa fase com carinho.";
 
 const localBackgroundPhotoUrls = Object.values(
   import.meta.glob<string>("/src/assets/background-photos/*.{jpg,jpeg,png,webp,avif}", {
@@ -160,9 +164,9 @@ function PublicPage() {
   );
 
   const eventDateTime = useMemo(() => {
-    if (!event?.event_date) return null;
-    const t = event.event_time ?? "19:00";
-    return new Date(`${event.event_date}T${t}`);
+    const date = event?.event_date ?? OPEN_HOUSE_DATE;
+    const time = event?.event_time ?? OPEN_HOUSE_TIME;
+    return new Date(date + "T" + time);
   }, [event]);
   const cd = useCountdown(eventDateTime);
 
@@ -214,104 +218,37 @@ function PublicPage() {
             </Button>
           </nav>
 
-          <section
-            id="top"
-            className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:py-10"
-          >
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-terracotta/20 bg-white/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-terracotta shadow-soft backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" /> Você está convidado
-              </div>
-              <h1 className="mt-7 font-display text-5xl leading-[0.95] text-forest sm:text-7xl lg:text-8xl">
-                {event?.name ?? "Nosso Chá de Casa Nova"}
+          <section id="top" className="flex flex-1 items-center justify-center py-14 lg:py-10">
+            <div className="mx-auto max-w-4xl rounded-lg border border-white/70 bg-[#f8f2e7]/82 px-6 py-12 text-center shadow-premium backdrop-blur-xl sm:px-10 lg:px-14">
+              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-terracotta">
+                Open house
+              </p>
+              <h1 className="mt-5 font-sans text-5xl font-semibold uppercase leading-[0.95] tracking-[0.04em] text-black sm:text-7xl lg:text-8xl">
+                Dani e Andressa
               </h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-foreground/72 sm:text-lg">
-                {event?.welcome_text ??
-                  "Uma tarde para celebrar o novo lar, dividir histórias boas e receber quem faz parte da nossa vida."}
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-foreground/72 sm:text-lg">
+                {event?.welcome_text ?? OPEN_HOUSE_FALLBACK_TEXT}
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3 text-sm text-foreground/75">
-                {event?.event_date && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/55 px-4 py-2 shadow-soft backdrop-blur">
-                    <Calendar className="h-4 w-4 text-terracotta" />
-                    {new Date(`${event.event_date}T00:00:00`).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                )}
-                {event?.event_time && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/55 px-4 py-2 shadow-soft backdrop-blur">
-                    <Clock className="h-4 w-4 text-terracotta" /> {event.event_time.slice(0, 5)}
-                  </span>
-                )}
+              <div className="mx-auto mt-9 flex max-w-3xl flex-wrap items-center justify-center gap-3 text-sm text-foreground/75">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
+                  <Calendar className="h-4 w-4 text-terracotta" />
+                  08 de agosto de 2026
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
+                  <Clock className="h-4 w-4 text-terracotta" />{" "}
+                  {event?.event_time?.slice(0, 5) ?? OPEN_HOUSE_TIME}
+                </span>
                 {event?.city && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/55 px-4 py-2 shadow-soft backdrop-blur">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
                     <MapPin className="h-4 w-4 text-terracotta" /> {event.city}
-                    {event.state ? ` - ${event.state}` : ""}
+                    {event.state ? " - " + event.state : ""}
                   </span>
                 )}
-              </div>
-
-              <div className="mt-10 flex flex-wrap items-center gap-3">
-                <Button
-                  size="lg"
-                  className="rounded-lg px-7 shadow-premium"
-                  onClick={() => setRsvpOpen(true)}
-                >
-                  Confirmar presença
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="rounded-lg border-white/70 bg-white/55 px-7 backdrop-blur"
-                >
-                  <a href="#presentes">
-                    <GiftIcon className="mr-2 h-4 w-4" /> Ver lista
-                  </a>
-                </Button>
-              </div>
-            </div>
-
-            <aside className="rounded-lg border border-white/70 bg-white/58 p-4 shadow-premium backdrop-blur-2xl sm:p-5">
-              <div className="open-house-invite relative isolate flex aspect-[4/5] min-h-[560px] overflow-hidden rounded-lg border border-forest/10 bg-[#f8f2e7] px-8 py-10 text-center shadow-card sm:px-10">
-                <img
-                  src={openHouseBorder}
-                  alt=""
-                  aria-hidden="true"
-                  className="absolute inset-0 -z-10 h-full w-full object-cover opacity-95"
-                />
-                <div className="m-auto w-full max-w-sm">
-                  <p className="font-sans text-5xl font-semibold uppercase tracking-[0.02em] text-black sm:text-6xl">
-                    Open House
-                  </p>
-                  <p className="mt-4 font-sans text-3xl font-semibold uppercase tracking-[0.08em] text-black sm:text-4xl">
-                    {event?.name ?? "Casa Nova"}
-                  </p>
-                  <div className="my-9 h-px w-full bg-black" />
-                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-sans text-xl uppercase tracking-[0.04em] text-black sm:text-2xl">
-                    {event?.event_date && (
-                      <span>
-                        {new Date(`${event.event_date}T00:00:00`).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "short",
-                        })}
-                      </span>
-                    )}
-                    {event?.event_date && <span>?</span>}
-                    <span>{event?.event_time ? event.event_time.slice(0, 5) : "15:00"}</span>
-                  </div>
-                  <div className="my-9 h-px w-full bg-black" />
-                  <p className="mx-auto max-w-xs font-sans text-base font-medium uppercase leading-7 tracking-[0.02em] text-black sm:text-lg">
-                    {fullAddress || "Endereco do open house"}
-                  </p>
-                </div>
               </div>
 
               {cd && !cd.finished && (
-                <div className="mt-4 grid grid-cols-4 gap-2">
+                <div className="mx-auto mt-10 grid max-w-xl grid-cols-4 gap-2 sm:gap-3">
                   {[
                     { label: "dias", v: cd.days },
                     { label: "horas", v: cd.hours },
@@ -320,19 +257,39 @@ function PublicPage() {
                   ].map((x) => (
                     <div
                       key={x.label}
-                      className="rounded-lg border border-forest/10 bg-card/78 px-2 py-3 text-center shadow-soft backdrop-blur"
+                      className="rounded-lg border border-forest/10 bg-white/76 px-2 py-4 text-center shadow-soft backdrop-blur"
                     >
-                      <div className="font-display text-3xl text-forest">
+                      <div className="font-sans text-3xl font-semibold text-forest sm:text-4xl">
                         {String(x.v).padStart(2, "0")}
                       </div>
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
                         {x.label}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </aside>
+
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <Button
+                  size="lg"
+                  className="rounded-lg px-7 shadow-premium"
+                  onClick={() => setRsvpOpen(true)}
+                >
+                  Confirmar presen?a
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-lg border-white/70 bg-white/65 px-7 backdrop-blur"
+                >
+                  <a href="#presentes">
+                    <GiftIcon className="mr-2 h-4 w-4" /> Ver lista
+                  </a>
+                </Button>
+              </div>
+            </div>
           </section>
         </header>
 
