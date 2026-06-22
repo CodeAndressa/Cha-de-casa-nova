@@ -126,14 +126,21 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, .font-display {
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: 0;
   }
@@ -149,8 +156,11 @@
     border: 1px solid oklch(1 0 0 / 64%);
     background: oklch(0.99 0.012 125 / 0.6);
     box-shadow: 0 18px 45px oklch(0.24 0.07 150 / 0.16);
-    opacity: 0.24;
-    filter: saturate(0.9) contrast(0.96);
+    --float-rotate: 0deg;
+    opacity: 0.36;
+    filter: saturate(0.95) contrast(0.98);
+    transform: translate3d(0, 0, 0) rotate(var(--float-rotate));
+    will-change: transform;
     animation: float-photo 18s ease-in-out infinite alternate;
   }
 
@@ -161,33 +171,86 @@
     background: linear-gradient(180deg, transparent, oklch(0.24 0.07 150 / 0.12));
   }
 
-  .floating-photo-1 { left: 5%; top: 12%; transform: rotate(-8deg); animation-duration: 19s; }
-  .floating-photo-2 { right: 8%; top: 10%; transform: rotate(7deg); animation-duration: 23s; animation-delay: -7s; }
-  .floating-photo-3 { left: 14%; top: 48%; transform: rotate(10deg); animation-duration: 21s; animation-delay: -4s; }
-  .floating-photo-4 { right: 16%; top: 45%; transform: rotate(-9deg); animation-duration: 25s; animation-delay: -12s; }
-  .floating-photo-5 { left: 44%; top: 18%; transform: rotate(4deg); animation-duration: 20s; animation-delay: -2s; }
-  .floating-photo-6 { left: 6%; bottom: 8%; transform: rotate(6deg); animation-duration: 24s; animation-delay: -10s; }
-  .floating-photo-7 { right: 6%; bottom: 12%; transform: rotate(-6deg); animation-duration: 22s; animation-delay: -5s; }
-  .floating-photo-8 { left: 36%; bottom: 4%; transform: rotate(-3deg); animation-duration: 26s; animation-delay: -14s; }
-  .floating-photo-9 { right: 42%; top: 62%; transform: rotate(8deg); animation-duration: 28s; animation-delay: -16s; }
+  .floating-photo-1 {
+    left: 5%;
+    top: 12%;
+    --float-rotate: -8deg;
+    animation-duration: 19s;
+  }
+  .floating-photo-2 {
+    right: 8%;
+    top: 10%;
+    --float-rotate: 7deg;
+    animation-duration: 23s;
+    animation-delay: -7s;
+  }
+  .floating-photo-3 {
+    left: 14%;
+    top: 48%;
+    --float-rotate: 10deg;
+    animation-duration: 21s;
+    animation-delay: -4s;
+  }
+  .floating-photo-4 {
+    right: 16%;
+    top: 45%;
+    --float-rotate: -9deg;
+    animation-duration: 25s;
+    animation-delay: -12s;
+  }
+  .floating-photo-5 {
+    left: 44%;
+    top: 18%;
+    --float-rotate: 4deg;
+    animation-duration: 20s;
+    animation-delay: -2s;
+  }
+  .floating-photo-6 {
+    left: 6%;
+    bottom: 8%;
+    --float-rotate: 6deg;
+    animation-duration: 24s;
+    animation-delay: -10s;
+  }
+  .floating-photo-7 {
+    right: 6%;
+    bottom: 12%;
+    --float-rotate: -6deg;
+    animation-duration: 22s;
+    animation-delay: -5s;
+  }
+  .floating-photo-8 {
+    left: 36%;
+    bottom: 4%;
+    --float-rotate: -3deg;
+    animation-duration: 26s;
+    animation-delay: -14s;
+  }
+  .floating-photo-9 {
+    right: 42%;
+    top: 62%;
+    --float-rotate: 8deg;
+    animation-duration: 28s;
+    animation-delay: -16s;
+  }
 }
 
 @keyframes float-photo {
   0% {
-    translate: 0 0;
+    transform: translate3d(0, 0, 0) rotate(var(--float-rotate));
   }
   50% {
-    translate: 18px -28px;
+    transform: translate3d(30px, -36px, 0) rotate(calc(var(--float-rotate) + 3deg));
   }
   100% {
-    translate: -16px 22px;
+    transform: translate3d(-26px, 28px, 0) rotate(calc(var(--float-rotate) - 2deg));
   }
 }
 
 @media (max-width: 640px) {
   .floating-photo {
     width: 4.5rem;
-    opacity: 0.18;
+    opacity: 0.24;
   }
 
   .floating-photo-5,

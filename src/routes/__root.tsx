@@ -12,16 +12,14 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl text-foreground">404</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Página não encontrada.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Página não encontrada.</p>
         <div className="mt-6">
           <Link
             to="/"
@@ -51,7 +49,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
             Tentar novamente
@@ -70,18 +71,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Chá de Casa Nova" },
       { name: "description", content: "Lista de presentes digital para o nosso chá de casa nova." },
       { property: "og:title", content: "Chá de Casa Nova" },
-      { property: "og:description", content: "Lista de presentes digital para o nosso chá de casa nova." },
+      {
+        property: "og:description",
+        content: "Lista de presentes digital para o nosso chá de casa nova.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "Chá de Casa Nova" },
-      { name: "twitter:description", content: "Lista de presentes digital para o nosso chá de casa nova." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7d7ddd08-a993-47f3-a67b-d8c86de28874/id-preview-0fef888f--240a4e21-4c19-465a-953b-ab611d3401e8.lovable.app-1781811086906.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7d7ddd08-a993-47f3-a67b-d8c86de28874/id-preview-0fef888f--240a4e21-4c19-465a-953b-ab611d3401e8.lovable.app-1781811086906.png" },
+      {
+        name: "twitter:description",
+        content: "Lista de presentes digital para o nosso chá de casa nova.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7d7ddd08-a993-47f3-a67b-d8c86de28874/id-preview-0fef888f--240a4e21-4c19-465a-953b-ab611d3401e8.lovable.app-1781811086906.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7d7ddd08-a993-47f3-a67b-d8c86de28874/id-preview-0fef888f--240a4e21-4c19-465a-953b-ab611d3401e8.lovable.app-1781811086906.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -110,6 +128,7 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
