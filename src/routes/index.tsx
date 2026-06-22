@@ -56,7 +56,7 @@ const PIX_TIERS: PixTier[] = [
   { id: "despensa",  emoji: "🛒", value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
   { id: "jantar",   emoji: "🍽️", value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
   { id: "decoracao",emoji: "🌿", value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
-  { id: "cafe",     emoji: "☕", value: 200, label: "Cantinho do café",   description: "O cantinho do café dos nossos sonhos" },
+  { id: "cinema",   emoji: "🎬", value: 200, label: "Noite de filmes",    description: "Pipoca, manta e primeira maratona na casa nova" },
   { id: "moveis",   emoji: "🛋️", value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
 ];
 
@@ -385,7 +385,22 @@ function PublicPage() {
               <p className="mt-2 text-center text-sm text-white/55">
                 Escolha uma ideia e contribua com o valor que quiser
               </p>
-              <div className="mt-7 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+                {gifts.filter(isPixCota).map((g) => (
+                  <PixCotaGiftCard
+                    key={g.id}
+                    gift={g}
+                    onClick={() =>
+                      setSelectedTier({
+                        id: g.id,
+                        emoji: "🎁",
+                        value: g.estimated_value ?? 50,
+                        label: g.name,
+                        description: "Contribua com o valor sugerido via Pix",
+                      })
+                    }
+                  />
+                ))}
                 {PIX_TIERS.map((tier, i) => (
                   <PixTierCard key={tier.id} tier={tier} index={i} onClick={() => setSelectedTier(tier)} />
                 ))}
@@ -719,6 +734,37 @@ function GiftCard({ gift, onReserve, hideDescription }: { gift: Gift; onReserve:
         )}
       </div>
     </Card>
+  );
+}
+
+function PixCotaGiftCard({ gift, onClick }: { gift: Gift; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-2xl border border-white/15 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-white/35 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+    >
+      {gift.image_url ? (
+        <img
+          src={gift.image_url}
+          alt={gift.name}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+      <div className="relative flex h-full min-h-[13rem] flex-col justify-end p-4">
+        <span className="inline-block w-fit rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white backdrop-blur-sm">
+          {formatBRL(gift.estimated_value)}
+        </span>
+        <h3 className="mt-1.5 font-display text-xl leading-tight text-white">{gift.name}</h3>
+        <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/60 transition-colors group-hover:text-white/90">
+          <Heart className="h-3 w-3" />
+          Contribuir
+        </div>
+      </div>
+    </button>
   );
 }
 
