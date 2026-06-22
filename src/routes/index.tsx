@@ -255,6 +255,9 @@ function PublicPage() {
         </section>
       )}
 
+      {/* Photo gallery */}
+      <PhotoGallery />
+
       {/* Message */}
       <MessageSection />
 
