@@ -744,22 +744,14 @@ function PixCotaGiftCard({ gift, onClick }: { gift: Gift; onClick: () => void })
       onClick={onClick}
       className="group relative overflow-hidden rounded-2xl border border-white/15 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-white/35 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
     >
-      {gift.image_url ? (
-        <img
-          src={gift.image_url}
-          alt={gift.name}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
-      <div className="relative flex h-full min-h-[13rem] flex-col justify-end p-4">
-        <span className="inline-block w-fit rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]" />
+      <div className="relative flex h-full flex-col p-5">
+        <span className="text-4xl leading-none">🎁</span>
+        <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
           {formatBRL(gift.estimated_value)}
         </span>
-        <h3 className="mt-1.5 font-display text-xl leading-tight text-white">{gift.name}</h3>
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/60 transition-colors group-hover:text-white/90">
+        <h3 className="mt-2 font-display text-xl leading-tight text-white">{gift.name}</h3>
+        <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
           <Heart className="h-3 w-3" />
           Contribuir
         </div>
