@@ -344,6 +344,7 @@ function PhotosTab() {
 
   const [editing, setEditing] = useState<Partial<CouplePhoto> | null>(null);
   const [form, setForm] = useState<Partial<CouplePhoto>>({});
+  const [uploading, setUploading] = useState(false);
   useEffect(() => { if (editing) setForm(editing); }, [editing]);
 
   const save = useMutation({
@@ -441,7 +442,36 @@ function PhotosTab() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>URL da imagem</Label>
+              <Label>Enviar arquivo</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                disabled={uploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    setUploading(true);
+                    const ext = file.name.split(".").pop() || "jpg";
+                    const path = `${crypto.randomUUID()}.${ext}`;
+                    const up = await supabase.storage.from("couple-photos").upload(path, file, { contentType: file.type, upsert: false });
+                    if (up.error) throw up.error;
+                    const signed = await supabase.storage.from("couple-photos").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+                    if (signed.error) throw signed.error;
+                    setForm((f) => ({ ...f, image_url: signed.data.signedUrl }));
+                    toast.success("Foto enviada");
+                  } catch (err) {
+                    toast.error((err as Error).message);
+                  } finally {
+                    setUploading(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">JPG, PNG ou WebP, até 5MB. Google Photos e Drive não funcionam por link direto — faça upload do arquivo.</p>
+            </div>
+            <div>
+              <Label>Ou cole uma URL pública</Label>
               <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
             </div>
             <div>
@@ -452,7 +482,7 @@ function PhotosTab() {
               <div className="mx-auto w-40">
                 <div className="rounded-[2px] bg-card p-2 pb-6 shadow-card ring-1 ring-border">
                   <div className="aspect-[4/5] overflow-hidden bg-secondary">
-                    <img src={form.image_url} alt="" className="h-full w-full object-cover" />
+                    <img src={form.image_url} alt="" className="h-full w-full object-cover" onError={() => toast.error("Esta URL não pôde ser carregada — tente fazer upload do arquivo")} />
                   </div>
                 </div>
               </div>
