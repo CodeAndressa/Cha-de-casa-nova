@@ -568,6 +568,12 @@ function MiniFooter({ whatsappPhone }: { whatsappPhone?: string | null }) {
       <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-white/30">
         Feito com <Heart className="h-3 w-3 fill-white/30 text-white/30" /> para o nosso novo lar
       </p>
+      <div className="mt-4 border-t border-white/8 pt-4">
+        <p className="text-xs font-medium text-white/40">Desenvolvido por Andressa Soares</p>
+        <p className="mx-auto mt-1 max-w-xs text-[11px] leading-5 text-white/22">
+          Não achei nenhum site legal para lista de presentes do meu chá de casa nova — então desenvolvi o meu próprio.
+        </p>
+      </div>
     </footer>
   );
 }
