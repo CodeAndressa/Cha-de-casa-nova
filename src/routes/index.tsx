@@ -189,10 +189,10 @@ function PublicPage() {
 
   const [view, setView] = useState<View>("hero");
   const [filter, setFilter] = useState<"all" | GiftCategory>("all");
-  const filtered = useMemo(
-    () => (filter === "all" ? gifts : gifts.filter((g) => g.category === filter)),
-    [gifts, filter],
-  );
+  const filtered = useMemo(() => {
+    const base = filter === "all" ? gifts : gifts.filter((g) => g.category === filter);
+    return base.filter((g) => !isPixCota(g));
+  }, [gifts, filter]);
 
   const eventDateTime = useMemo(() => {
     const date = event?.event_date ?? OPEN_HOUSE_DATE;
