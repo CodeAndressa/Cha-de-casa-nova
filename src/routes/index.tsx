@@ -187,6 +187,8 @@ function PublicPage() {
     enabled: isSupabaseConfigured,
   });
 
+  const isPixCota = (g: Gift) => !!g.description?.toLowerCase().startsWith("cota pix");
+
   const [view, setView] = useState<View>("hero");
   const [filter, setFilter] = useState<"all" | GiftCategory>("all");
   const filtered = useMemo(() => {
@@ -214,8 +216,6 @@ function PublicPage() {
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
   const pixSectionRef = useRef<HTMLDivElement>(null);
-
-  const isPixCota = (g: Gift) => !!g.description?.toLowerCase().startsWith("cota pix");
 
   const handleReserve = (g: Gift) => {
     if (isPixCota(g)) {
