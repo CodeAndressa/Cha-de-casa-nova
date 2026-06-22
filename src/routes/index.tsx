@@ -14,6 +14,11 @@ import {
   Check,
   ArrowLeft,
   ExternalLink,
+  ShoppingCart,
+  UtensilsCrossed,
+  Leaf,
+  Film,
+  Ruler,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
@@ -50,14 +55,20 @@ function parseGiftLinks(external_link: string | null): { label: string; url: str
   return [{ label: "Ver produto", url: external_link }];
 }
 
-type PixTier = { id: string; emoji: string; value: number; label: string; description: string };
+type PixTier = {
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  value: number;
+  label: string;
+  description: string;
+};
 
 const PIX_TIERS: PixTier[] = [
-  { id: "despensa",  emoji: "🛒", value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
-  { id: "jantar",   emoji: "🍽️", value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
-  { id: "decoracao",emoji: "🌿", value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
-  { id: "cinema",   emoji: "🎬", value: 200, label: "Noite de filmes",    description: "Pipoca, manta e primeira maratona na casa nova" },
-  { id: "moveis",   emoji: "🛋️", value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
+  { id: "despensa",  icon: ShoppingCart,    value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
+  { id: "jantar",   icon: UtensilsCrossed,  value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
+  { id: "decoracao",icon: Leaf,             value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
+  { id: "cinema",   icon: Film,             value: 200, label: "Noite de filmes",    description: "Pipoca, manta e primeira maratona na casa nova" },
+  { id: "moveis",   icon: Ruler,            value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
 ];
 
 const TIER_GRADIENTS = [
@@ -393,10 +404,10 @@ function PublicPage() {
                     onClick={() =>
                       setSelectedTier({
                         id: g.id,
-                        emoji: "🎁",
+                        icon: GiftIcon,
                         value: g.estimated_value ?? 50,
                         label: g.name,
-                        description: "Contribua com o valor sugerido via Pix",
+                        description: "Deixa a gente escolher — você só precisa fazer o Pix",
                       })
                     }
                   />
@@ -746,11 +757,14 @@ function PixCotaGiftCard({ gift, onClick }: { gift: Gift; onClick: () => void })
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]" />
       <div className="relative flex h-full flex-col p-5">
-        <span className="text-4xl leading-none">🎁</span>
+        <GiftIcon className="h-9 w-9 text-white/75" />
         <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
           {formatBRL(gift.estimated_value)}
         </span>
         <h3 className="mt-2 font-display text-xl leading-tight text-white">{gift.name}</h3>
+        <p className="mt-1.5 text-[11px] leading-5 text-white/60">
+          A gente compra com carinho e não conta pra ninguém
+        </p>
         <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
           <Heart className="h-3 w-3" />
           Contribuir
@@ -769,7 +783,7 @@ function PixTierCard({ tier, index, onClick }: { tier: PixTier; index: number; o
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${TIER_GRADIENTS[index]}`} />
       <div className="relative flex h-full flex-col p-5">
-        <span className="text-4xl leading-none">{tier.emoji}</span>
+        <tier.icon className="h-9 w-9 text-white/75" />
         <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
           {formatBRL(tier.value)}
         </span>
@@ -828,7 +842,7 @@ function PixTierDialog({
     <Dialog open={!!tier} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <span className="text-5xl leading-none">{tier?.emoji}</span>
+          {tier && <tier.icon className="h-10 w-10 text-forest" />}
           <DialogTitle className="mt-3 font-display text-3xl">{tier?.label}</DialogTitle>
           <DialogDescription className="text-sm leading-6">{tier?.description}</DialogDescription>
         </DialogHeader>
