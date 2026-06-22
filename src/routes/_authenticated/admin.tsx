@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LogOut, Plus, Pencil, Trash2, Home, GripVertical, Image as ImageIcon } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Home, GripVertical, Image as ImageIcon, ExternalLink } from "lucide-react";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -34,6 +34,15 @@ type Gift = {
   quantity: number; status: GiftStatus; sort_order: number;
 };
 type CouplePhoto = { id: string; image_url: string; caption: string | null; sort_order: number };
+type GiftLink = { label: string; url: string };
+
+function parseGiftLinks(external_link: string | null): GiftLink[] {
+  if (!external_link) return [];
+  if (external_link.trim().startsWith("[")) {
+    try { return JSON.parse(external_link); } catch { /* fall through */ }
+  }
+  return [{ label: "Ver produto", url: external_link }];
+}
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -248,17 +257,28 @@ function SortableGiftRow({ gift: g, onEdit, onDelete }: { gift: Gift; onEdit: ()
 function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null; onClose: () => void; onSaved: () => void }) {
   const isOpen = !!gift;
   const [form, setForm] = useState<Partial<Gift>>({});
+  const [links, setLinks] = useState<GiftLink[]>([]);
 
   useEffect(() => {
-    if (gift) setForm(gift);
+    if (gift) {
+      setForm(gift);
+      setLinks(parseGiftLinks(gift.external_link ?? null));
+    }
   }, [gift]);
+
+  const addLink = () => setLinks((l) => [...l, { label: "", url: "" }]);
+  const updateLink = (i: number, field: keyof GiftLink, value: string) =>
+    setLinks((l) => l.map((item, j) => (j === i ? { ...item, [field]: value } : item)));
+  const removeLink = (i: number) => setLinks((l) => l.filter((_, j) => j !== i));
 
   const save = useMutation({
     mutationFn: async () => {
+      const validLinks = links.filter((l) => l.url.trim());
       const payload = {
         name: form.name!, category: form.category!, description: form.description ?? null,
         estimated_value: form.estimated_value ?? null, image_url: form.image_url ?? null,
-        external_link: form.external_link ?? null, quantity: form.quantity ?? 1, status: form.status ?? "disponivel",
+        external_link: validLinks.length > 0 ? JSON.stringify(validLinks) : null,
+        quantity: form.quantity ?? 1, status: form.status ?? "disponivel",
       };
       if (form.id) {
         const { error } = await supabase.from("gifts").update(payload).eq("id", form.id);
@@ -276,7 +296,7 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle className="font-display text-2xl">{form.id ? "Editar" : "Novo"} presente</DialogTitle></DialogHeader>
-        <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
+        <div className="grid max-h-[65vh] gap-3 overflow-y-auto pr-1">
           <div>
             <Label>Nome</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -316,8 +336,35 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
             <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
           </div>
           <div>
-            <Label>Link externo (opcional)</Label>
-            <Input value={form.external_link ?? ""} onChange={(e) => setForm({ ...form, external_link: e.target.value })} placeholder="https://..." />
+            <div className="mb-2 flex items-center justify-between">
+              <Label>Links de compra</Label>
+              <Button type="button" size="sm" variant="outline" onClick={addLink} className="h-7 gap-1 rounded-full px-2.5 text-xs">
+                <Plus className="h-3 w-3" /> Adicionar link
+              </Button>
+            </div>
+            {links.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum link ainda. Adicione links de lojas como Amazon, Mercado Livre etc.</p>
+            )}
+            <div className="space-y-2">
+              {links.map((link, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input
+                    placeholder="Amazon"
+                    value={link.label}
+                    onChange={(e) => updateLink(i, "label", e.target.value)}
+                    className="w-28 shrink-0"
+                  />
+                  <Input
+                    placeholder="https://..."
+                    value={link.url}
+                    onChange={(e) => updateLink(i, "url", e.target.value)}
+                  />
+                  <Button type="button" size="icon" variant="outline" onClick={() => removeLink(i)} className="shrink-0">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <DialogFooter>

@@ -1,16 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   MapPin,
   Calendar,
   Clock,
   MessageCircle,
+  MessageSquare,
   Copy,
   Heart,
   Gift as GiftIcon,
   Check,
+  ArrowLeft,
+  ExternalLink,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
@@ -39,7 +42,14 @@ import {
 } from "@/lib/categories";
 import { useCountdown } from "@/hooks/use-countdown";
 
-const OPEN_HOUSE_TITLE = "Open House da Dani e Andressa";
+function parseGiftLinks(external_link: string | null): { label: string; url: string }[] {
+  if (!external_link) return [];
+  if (external_link.trim().startsWith("[")) {
+    try { return JSON.parse(external_link); } catch { /* fall through */ }
+  }
+  return [{ label: "Ver produto", url: external_link }];
+}
+
 const OPEN_HOUSE_DATE = "2026-08-08";
 const OPEN_HOUSE_TIME = "15:00";
 const OPEN_HOUSE_FALLBACK_TEXT =
@@ -103,6 +113,8 @@ type CouplePhoto = {
   caption: string | null;
 };
 
+type View = "hero" | "presentes" | "recado";
+
 function PublicPage() {
   const qc = useQueryClient();
 
@@ -157,6 +169,7 @@ function PublicPage() {
     enabled: isSupabaseConfigured,
   });
 
+  const [view, setView] = useState<View>("hero");
   const [filter, setFilter] = useState<"all" | GiftCategory>("all");
   const filtered = useMemo(
     () => (filter === "all" ? gifts : gifts.filter((g) => g.category === filter)),
@@ -180,6 +193,18 @@ function PublicPage() {
 
   const [reserveGift, setReserveGift] = useState<Gift | null>(null);
   const [rsvpOpen, setRsvpOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
+  const pixSectionRef = useRef<HTMLDivElement>(null);
+
+  const isPixCota = (g: Gift) => !!g.description?.toLowerCase().startsWith("cota pix");
+
+  const handleReserve = (g: Gift) => {
+    if (isPixCota(g)) {
+      pixSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      setReserveGift(g);
+    }
+  };
 
   const copyPix = async () => {
     if (!event?.pix_key) return;
@@ -188,67 +213,79 @@ function PublicPage() {
   };
 
   return (
-    <div className="relative min-h-screen isolate overflow-hidden bg-background text-foreground">
+    <div className="relative h-screen overflow-hidden bg-[oklch(0.20_0.08_155)] text-foreground">
       <FloatingPhotoBackground
         photos={photos}
         localPhotos={localBackgroundPhotoUrls}
         fallback={event?.cover_image_url || coverImg}
       />
-      <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(circle_at_20%_10%,oklch(0.92_0.05_115_/_0.58),transparent_34%),linear-gradient(180deg,oklch(0.98_0.018_118_/_0.82),oklch(0.94_0.025_122_/_0.76)_48%,oklch(0.98_0.012_105_/_0.86))]" />
+      <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(ellipse_at_top,oklch(0.30_0.10_148_/_0.45),transparent_50%),linear-gradient(to_bottom,transparent_55%,oklch(0.14_0.07_158_/_0.65))]" />
 
-      <main className="relative z-10">
-        <header className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
-          <nav className="flex items-center justify-between rounded-lg border border-white/60 bg-white/55 px-4 py-3 shadow-premium backdrop-blur-xl">
-            <a href="#top" className="font-display text-xl text-forest">
+      {/* ── HERO VIEW ── */}
+      <div
+        className={`relative z-10 flex h-full flex-col ${view !== "hero" ? "hidden" : ""}`}
+      >
+        <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
+          <nav className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-soft backdrop-blur-xl">
+            <span className="mr-auto font-display text-xl tracking-wide text-white">
               Chá de Casa Nova
-            </a>
-            <div className="hidden items-center gap-6 text-xs font-medium uppercase tracking-[0.22em] text-foreground/65 sm:flex">
-              <a href="#presentes" className="transition hover:text-forest">
-                Presentes
-              </a>
-              <a href="#pix" className="transition hover:text-forest">
-                Pix
-              </a>
-              <a href="#recado" className="transition hover:text-forest">
-                Recado
-              </a>
-            </div>
-            <Button size="sm" className="rounded-lg px-4" onClick={() => setRsvpOpen(true)}>
+            </span>
+            <NavButton onClick={() => setView("presentes")} icon={GiftIcon} label="Presentes" />
+            <NavButton onClick={() => setView("recado")} icon={MessageSquare} label="Recados" />
+            <NavButton
+              onClick={() => setAddressOpen(true)}
+              icon={MapPin}
+              label="Endereço"
+              disabled={!fullAddress}
+            />
+            <NavButton
+              href={
+                event?.whatsapp_phone
+                  ? `https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`
+                  : undefined
+              }
+              icon={MessageCircle}
+              label="WhatsApp"
+              external
+              disabled={!event?.whatsapp_phone}
+            />
+            <Button size="sm" className="ml-2 rounded-xl px-4" onClick={() => setRsvpOpen(true)}>
               Confirmar
             </Button>
           </nav>
 
-          <section id="top" className="flex flex-1 items-center justify-center py-14 lg:py-10">
-            <div className="mx-auto max-w-4xl rounded-lg border border-white/70 bg-[#f8f2e7]/82 px-6 py-12 text-center shadow-premium backdrop-blur-xl sm:px-10 lg:px-14">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-terracotta">
+          <section className="flex flex-1 items-center justify-center px-1 py-6 sm:py-8">
+            <div className="w-full max-w-md rounded-2xl border border-white/80 bg-white/92 px-6 py-7 shadow-premium backdrop-blur-xl sm:px-8 sm:py-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.38em] text-terracotta">
                 Open house
               </p>
-              <h1 className="mt-5 font-sans text-5xl font-semibold uppercase leading-[0.95] tracking-[0.04em] text-black sm:text-7xl lg:text-8xl">
+              <h1 className="mt-2 font-display text-5xl leading-tight text-forest sm:text-6xl">
                 Dani e Andressa
               </h1>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-foreground/72 sm:text-lg">
+              <p className="mt-3 text-sm leading-6 text-foreground/68">
                 {event?.welcome_text ?? OPEN_HOUSE_FALLBACK_TEXT}
               </p>
 
-              <div className="mx-auto mt-9 flex max-w-3xl flex-wrap items-center justify-center gap-3 text-sm text-foreground/75">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
-                  <Calendar className="h-4 w-4 text-terracotta" />
-                  08 de agosto de 2026
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-foreground/70">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-terracotta" />
+                  08 ago 2026
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
-                  <Clock className="h-4 w-4 text-terracotta" />{" "}
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-terracotta" />
                   {event?.event_time?.slice(0, 5) ?? OPEN_HOUSE_TIME}
                 </span>
                 {event?.city && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/65 px-4 py-2 shadow-soft backdrop-blur">
-                    <MapPin className="h-4 w-4 text-terracotta" /> {event.city}
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-terracotta" />
+                    {event.city}
                     {event.state ? " - " + event.state : ""}
                   </span>
                 )}
               </div>
 
               {cd && !cd.finished && (
-                <div className="mx-auto mt-10 grid max-w-xl grid-cols-4 gap-2 sm:gap-3">
+                <div className="mt-5 grid grid-cols-4 gap-2">
                   {[
                     { label: "dias", v: cd.days },
                     { label: "horas", v: cd.hours },
@@ -257,12 +294,12 @@ function PublicPage() {
                   ].map((x) => (
                     <div
                       key={x.label}
-                      className="rounded-lg border border-forest/10 bg-white/76 px-2 py-4 text-center shadow-soft backdrop-blur"
+                      className="rounded-xl border border-forest/20 bg-gradient-to-b from-white/90 to-secondary/60 px-2 py-4 text-center shadow-soft"
                     >
-                      <div className="font-sans text-3xl font-semibold text-forest sm:text-4xl">
+                      <div className="font-display text-3xl font-semibold leading-none text-forest">
                         {String(x.v).padStart(2, "0")}
                       </div>
-                      <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <div className="mt-1.5 text-[9px] font-medium uppercase tracking-widest text-muted-foreground">
                         {x.label}
                       </div>
                     </div>
@@ -270,173 +307,127 @@ function PublicPage() {
                 </div>
               )}
 
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-6">
                 <Button
-                  size="lg"
-                  className="rounded-lg px-7 shadow-premium"
+                  className="h-11 w-full rounded-xl text-sm"
                   onClick={() => setRsvpOpen(true)}
                 >
-                  Confirmar presen?a
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="rounded-lg border-white/70 bg-white/65 px-7 backdrop-blur"
-                >
-                  <a href="#presentes">
-                    <GiftIcon className="mr-2 h-4 w-4" /> Ver lista
-                  </a>
+                  Confirmar presença
                 </Button>
               </div>
             </div>
           </section>
-        </header>
+        </div>
+      </div>
 
-        {fullAddress && (
-          <section className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
-            <Card className="rounded-lg border-white/70 bg-white/62 p-5 shadow-premium backdrop-blur-xl sm:p-7">
-              <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.25em] text-terracotta">Onde será</p>
-                  <h2 className="mt-2 font-display text-3xl text-forest">Endereço</h2>
-                  <p className="mt-2 text-sm leading-6 text-foreground/70">{fullAddress}</p>
-                </div>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="rounded-lg border-forest/15 bg-white/60"
-                >
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <MapPin className="mr-2 h-4 w-4" /> Abrir no Maps
-                  </a>
-                </Button>
-              </div>
-            </Card>
-          </section>
-        )}
-
-        <section id="presentes" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs uppercase tracking-[0.3em] text-terracotta">Com carinho</p>
-            <h2 className="mt-3 font-display text-5xl text-forest sm:text-6xl">
-              Lista de presentes
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-foreground/68">
-              Escolha um item para reservar ou contribua via Pix. Sua presença já é o nosso maior
-              presente.
-            </p>
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-2">
-            <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
-              Todas
-            </FilterChip>
-            {CATEGORIES.map((c) => (
-              <FilterChip
-                key={c.value}
-                active={filter === c.value}
-                onClick={() => setFilter(c.value)}
-              >
-                {c.label}
+      {/* ── PRESENTES VIEW ── */}
+      <div
+        className={`relative z-10 flex h-full flex-col ${view !== "presentes" ? "hidden" : ""}`}
+      >
+        <SubNav title="Lista de presentes" onBack={() => setView("hero")} />
+        <div className="flex-1 overflow-y-auto">
+          <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
+                Todas
               </FilterChip>
-            ))}
-          </div>
+              {CATEGORIES.map((c) => (
+                <FilterChip
+                  key={c.value}
+                  active={filter === c.value}
+                  onClick={() => setFilter(c.value)}
+                >
+                  {c.label}
+                </FilterChip>
+              ))}
+            </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((g) => (
-              <GiftCard key={g.id} gift={g} onReserve={() => setReserveGift(g)} />
-            ))}
-            {filtered.length === 0 && (
-              <p className="col-span-full rounded-lg border border-white/70 bg-white/55 px-5 py-10 text-center text-sm text-muted-foreground backdrop-blur">
-                Nenhum presente nesta categoria.
-              </p>
-            )}
-          </div>
-        </section>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((g) => (
+                <GiftCard key={g.id} gift={g} hideDescription={isPixCota(g)} onReserve={() => handleReserve(g)} />
+              ))}
+              {filtered.length === 0 && (
+                <p className="col-span-full rounded-2xl border border-white/15 bg-white/8 px-5 py-10 text-center text-sm text-white/55 backdrop-blur">
+                  Nenhum presente nesta categoria.
+                </p>
+              )}
+            </div>
+          </section>
 
-        {(event?.pix_key || event?.pix_qr_url) && (
-          <section id="pix" className="px-5 py-16 sm:px-8">
-            <div className="mx-auto max-w-4xl rounded-lg border border-white/70 bg-forest/92 p-6 text-forest-foreground shadow-premium backdrop-blur-xl sm:p-8">
-              <div className="grid gap-7 md:grid-cols-[0.9fr_1.1fr] md:items-center">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/62">
-                    Contribuir via Pix
-                  </p>
-                  <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
-                    Um mimo para o novo lar
-                  </h2>
-                  <p className="mt-4 text-sm leading-7 text-white/70">
-                    Se preferir, você também pode contribuir por Pix de forma simples.
-                  </p>
-                </div>
-                <div className="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
-                  {event?.pix_qr_url && (
-                    <img
-                      src={event.pix_qr_url}
-                      alt="QR Code Pix"
-                      className="mx-auto h-40 w-40 rounded-lg border border-white/20 bg-white p-2"
-                    />
-                  )}
-                  <div className="min-w-0 space-y-4">
-                    {event?.pix_owner && (
-                      <div>
-                        <p className="text-xs uppercase tracking-widest text-white/55">Titular</p>
-                        <p className="font-medium text-white">{event.pix_owner}</p>
-                      </div>
+          {(event?.pix_key || event?.pix_qr_url) && (
+            <section ref={pixSectionRef} className="px-5 pb-16 sm:px-8">
+              <div className="mx-auto max-w-4xl rounded-2xl border border-moss/30 bg-[oklch(0.26_0.10_156)] p-6 text-forest-foreground shadow-premium sm:p-8">
+                <div className="grid gap-7 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-white/55">
+                      Contribuir via Pix
+                    </p>
+                    <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
+                      Um mimo para o novo lar
+                    </h2>
+                    <p className="mt-4 text-sm leading-7 text-white/65">
+                      Se preferir, você também pode contribuir por Pix de forma simples.
+                    </p>
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
+                    {event?.pix_qr_url && (
+                      <img
+                        src={event.pix_qr_url}
+                        alt="QR Code Pix"
+                        className="mx-auto h-40 w-40 rounded-xl border border-white/20 bg-white p-2"
+                      />
                     )}
-                    {event?.pix_key && (
-                      <div>
-                        <p className="text-xs uppercase tracking-widest text-white/55">Chave Pix</p>
-                        <div className="mt-2 flex items-center gap-2">
-                          <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white">
-                            {event.pix_key}
-                          </code>
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            onClick={copyPix}
-                            aria-label="Copiar chave Pix"
-                            className="rounded-lg"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                    <div className="min-w-0 space-y-4">
+                      {event?.pix_owner && (
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-white/50">Titular</p>
+                          <p className="font-medium text-white">{event.pix_owner}</p>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      {event?.pix_key && (
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-white/50">
+                            Chave Pix
+                          </p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <code className="flex-1 truncate rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white">
+                              {event.pix_key}
+                            </code>
+                            <Button
+                              size="icon"
+                              variant="secondary"
+                              onClick={copyPix}
+                              aria-label="Copiar chave Pix"
+                              className="rounded-xl"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
+            </section>
+          )}
 
-        <MessageSection />
+          <MiniFooter whatsappPhone={event?.whatsapp_phone} />
+        </div>
+      </div>
 
-        <footer className="mx-auto max-w-7xl px-5 pb-10 pt-2 text-center text-sm text-muted-foreground sm:px-8">
-          <div className="rounded-lg border border-white/70 bg-white/60 px-5 py-8 shadow-soft backdrop-blur-xl">
-            {event?.whatsapp_phone && (
-              <Button asChild variant="outline" className="rounded-lg border-forest/15 bg-white/70">
-                <a
-                  href={`https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" /> Falar no WhatsApp
-                </a>
-              </Button>
-            )}
-            <p className="mt-6 flex items-center justify-center gap-1.5">
-              Feito com <Heart className="h-3.5 w-3.5 fill-terracotta text-terracotta" /> para o
-              nosso novo lar
-            </p>
+      {/* ── RECADO VIEW ── */}
+      <div
+        className={`relative z-10 flex h-full flex-col ${view !== "recado" ? "hidden" : ""}`}
+      >
+        <SubNav title="Deixe um recado" onBack={() => setView("hero")} />
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+            <RecadoForm />
           </div>
-        </footer>
-      </main>
+          <MiniFooter whatsappPhone={event?.whatsapp_phone} />
+        </div>
+      </div>
 
       <ReserveDialog
         gift={reserveGift}
@@ -447,6 +438,11 @@ function PublicPage() {
         }}
       />
       <RsvpDialog open={rsvpOpen} onOpenChange={setRsvpOpen} />
+      <AddressDialog
+        open={addressOpen}
+        onOpenChange={setAddressOpen}
+        fullAddress={fullAddress}
+      />
     </div>
   );
 }
@@ -480,6 +476,125 @@ function FloatingPhotoBackground({
   );
 }
 
+function SubNav({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[oklch(0.20_0.08_155)]/95 px-5 py-4 backdrop-blur-xl">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm font-medium text-white/70 transition hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </button>
+      <span className="font-display text-xl text-white">{title}</span>
+      <div className="w-16" />
+    </div>
+  );
+}
+
+function MiniFooter({ whatsappPhone }: { whatsappPhone?: string | null }) {
+  return (
+    <footer className="mx-auto max-w-7xl px-5 pb-10 pt-2 text-center sm:px-8">
+      <div className="rounded-2xl border border-white/20 bg-white/92 px-5 py-6 shadow-premium backdrop-blur-xl">
+        {whatsappPhone && (
+          <Button asChild variant="outline" className="rounded-xl border-forest/15 bg-white/70">
+            <a
+              href={`https://wa.me/${whatsappPhone.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" /> Falar no WhatsApp
+            </a>
+          </Button>
+        )}
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-foreground/60">
+          Feito com <Heart className="h-3.5 w-3.5 fill-terracotta text-terracotta" /> para o nosso
+          novo lar
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+function NavButton({
+  href,
+  onClick,
+  icon: Icon,
+  label,
+  external,
+  disabled,
+}: {
+  href?: string;
+  onClick?: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  external?: boolean;
+  disabled?: boolean;
+}) {
+  const cls = `flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/62 transition-all hover:bg-white/12 hover:text-white ${
+    disabled ? "pointer-events-none opacity-35" : ""
+  }`;
+
+  const inner = (
+    <>
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="hidden md:inline">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        className={cls}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={cls}>
+      {inner}
+    </button>
+  );
+}
+
+function AddressDialog({
+  open,
+  onOpenChange,
+  fullAddress,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  fullAddress: string;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">Endereço</DialogTitle>
+          <DialogDescription>Como chegar no nosso novo lar</DialogDescription>
+        </DialogHeader>
+        <p className="py-2 text-sm leading-6 text-foreground/80">{fullAddress}</p>
+        <DialogFooter>
+          <Button asChild className="w-full rounded-xl">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MapPin className="mr-2 h-4 w-4" /> Abrir no Maps
+            </a>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function FilterChip({
   active,
   onClick,
@@ -492,10 +607,10 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+      className={`rounded-full border px-5 py-2 text-sm font-medium transition-all duration-200 ${
         active
-          ? "border-forest bg-forest text-forest-foreground shadow-soft"
-          : "border-white/70 bg-white/58 text-foreground/72 backdrop-blur hover:border-forest/30 hover:text-forest"
+          ? "border-moss/50 bg-moss text-moss-foreground shadow-soft"
+          : "border-white/20 bg-white/10 text-white/72 backdrop-blur hover:border-white/35 hover:bg-white/16 hover:text-white"
       }`}
     >
       {children}
@@ -503,10 +618,12 @@ function FilterChip({
   );
 }
 
-function GiftCard({ gift, onReserve }: { gift: Gift; onReserve: () => void }) {
+function GiftCard({ gift, onReserve, hideDescription }: { gift: Gift; onReserve: () => void; hideDescription?: boolean }) {
   const isAvailable = gift.status === "disponivel";
+  const links = parseGiftLinks(gift.external_link);
+
   return (
-    <Card className="group overflow-hidden rounded-lg border-white/70 bg-white/68 p-0 shadow-soft backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-premium">
+    <Card className="group overflow-hidden rounded-2xl border-white/70 bg-white/90 p-0 shadow-card backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-premium">
       <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
         {gift.image_url ? (
           <img
@@ -521,23 +638,23 @@ function GiftCard({ gift, onReserve }: { gift: Gift; onReserve: () => void }) {
           </div>
         )}
         <Badge
-          className={`absolute left-3 top-3 rounded-full border-0 ${
+          className={`absolute left-3 top-3 rounded-full border-0 text-xs ${
             gift.status === "disponivel"
               ? "bg-olive text-olive-foreground"
               : gift.status === "reservado"
                 ? "bg-accent text-accent-foreground"
-                : "bg-terracotta text-terracotta-foreground"
+                : "bg-forest text-forest-foreground"
           }`}
         >
           {statusLabel(gift.status)}
         </Badge>
       </div>
       <div className="p-5">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
           {categoryLabel(gift.category)}
         </p>
         <h3 className="mt-1 font-display text-2xl leading-tight text-forest">{gift.name}</h3>
-        {gift.description && (
+        {gift.description && !hideDescription && (
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
             {gift.description}
           </p>
@@ -546,10 +663,26 @@ function GiftCard({ gift, onReserve }: { gift: Gift; onReserve: () => void }) {
           <span className="text-sm font-semibold text-foreground">
             {formatBRL(gift.estimated_value)}
           </span>
-          <Button size="sm" disabled={!isAvailable} onClick={onReserve} className="rounded-lg">
+          <Button size="sm" disabled={!isAvailable} onClick={onReserve} className="rounded-xl">
             {isAvailable ? "Quero presentear" : "Indisponível"}
           </Button>
         </div>
+        {links.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {links.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full border border-forest/20 bg-secondary px-2.5 py-1 text-xs font-medium text-forest transition-colors hover:bg-forest/10"
+              >
+                <ExternalLink className="h-3 w-3 shrink-0" />
+                {link.label || "Ver produto"}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -640,14 +773,14 @@ function ReserveDialog({
               <button
                 type="button"
                 onClick={() => setStatus("reservado")}
-                className={`rounded-lg border p-3 text-sm transition-all ${status === "reservado" ? "border-primary bg-secondary" : "border-border"}`}
+                className={`rounded-xl border p-3 text-sm transition-all ${status === "reservado" ? "border-primary bg-secondary" : "border-border"}`}
               >
                 Reservar (vou levar)
               </button>
               <button
                 type="button"
                 onClick={() => setStatus("presenteado")}
-                className={`rounded-lg border p-3 text-sm transition-all ${status === "presenteado" ? "border-primary bg-secondary" : "border-border"}`}
+                className={`rounded-xl border p-3 text-sm transition-all ${status === "presenteado" ? "border-primary bg-secondary" : "border-border"}`}
               >
                 Já presenteado
               </button>
@@ -759,7 +892,7 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
   );
 }
 
-function MessageSection() {
+function RecadoForm() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
 
@@ -781,43 +914,35 @@ function MessageSection() {
   });
 
   return (
-    <section id="recado" className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
-      <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-terracotta">Deixe uma mensagem</p>
-        <h2 className="mt-3 font-display text-4xl text-forest sm:text-5xl">
-          Um recado para os novos moradores
-        </h2>
-      </div>
-      <Card className="mt-8 rounded-lg border-white/70 bg-white/66 p-5 shadow-premium backdrop-blur-xl sm:p-7">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="m-name">Seu nome</Label>
-            <Input
-              id="m-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-            />
-          </div>
-          <div>
-            <Label htmlFor="m-msg">Mensagem</Label>
-            <Textarea
-              id="m-msg"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              maxLength={1000}
-              rows={4}
-            />
-          </div>
-          <Button
-            className="w-full rounded-lg"
-            onClick={() => mutation.mutate()}
-            disabled={!name.trim() || !message.trim() || mutation.isPending}
-          >
-            Enviar mensagem
-          </Button>
+    <Card className="rounded-2xl border-white/75 bg-white/90 p-5 shadow-premium backdrop-blur-xl sm:p-7">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="m-name">Seu nome</Label>
+          <Input
+            id="m-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={100}
+          />
         </div>
-      </Card>
-    </section>
+        <div>
+          <Label htmlFor="m-msg">Mensagem</Label>
+          <Textarea
+            id="m-msg"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={1000}
+            rows={5}
+          />
+        </div>
+        <Button
+          className="w-full rounded-xl"
+          onClick={() => mutation.mutate()}
+          disabled={!name.trim() || !message.trim() || mutation.isPending}
+        >
+          Enviar mensagem
+        </Button>
+      </div>
+    </Card>
   );
 }
