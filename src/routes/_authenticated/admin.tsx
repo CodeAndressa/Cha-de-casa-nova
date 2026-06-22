@@ -344,6 +344,7 @@ function PhotosTab() {
 
   const [editing, setEditing] = useState<Partial<CouplePhoto> | null>(null);
   const [form, setForm] = useState<Partial<CouplePhoto>>({});
+  const [uploading, setUploading] = useState(false);
   useEffect(() => { if (editing) setForm(editing); }, [editing]);
 
   const save = useMutation({
