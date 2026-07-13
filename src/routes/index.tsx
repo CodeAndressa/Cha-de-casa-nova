@@ -19,8 +19,6 @@ import {
   Leaf,
   Flame,
   Ruler,
-  Menu,
-  X,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
@@ -38,13 +36,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerClose,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { Card } from "@/components/ui/card";
 import {
   CATEGORIES,
@@ -235,7 +226,6 @@ function PublicPage() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
-  const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const pixSectionRef = useRef<HTMLDivElement>(null);
 
   const handleReserve = (g: Gift) => {
@@ -300,84 +290,50 @@ function PublicPage() {
           </nav>
 
           {/* Mobile Nav */}
-          <div className="flex md:hidden shrink-0 items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-3 py-3 shadow-soft backdrop-blur-xl">
-            <span className="font-display text-sm tracking-wide text-white/60">
+          <div className="flex md:hidden shrink-0 items-center justify-between gap-1 rounded-2xl border border-white/15 bg-white/10 px-2 py-3 shadow-soft backdrop-blur-xl">
+            <span className="flex-1 font-display text-xs tracking-wide text-white/40">
               ♡
             </span>
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => setNavDrawerOpen(true)}
-              className="h-10 w-10 text-white hover:bg-white/30 hover:text-white/90 rounded-lg transition-all"
+              onClick={() => setView("presentes")}
+              className="h-10 w-10 text-white hover:bg-white/20 rounded-lg transition-all"
+              title="Presentes"
             >
-              <Menu className="h-6 w-6" />
+              <GiftIcon className="h-5 w-5" />
             </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setView("recado")}
+              className="h-10 w-10 text-white hover:bg-white/20 rounded-lg transition-all"
+              title="Recados"
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setAddressOpen(true)}
+              disabled={!fullAddress}
+              className="h-10 w-10 text-white hover:bg-white/20 rounded-lg transition-all disabled:opacity-50"
+              title="Endereço"
+            >
+              <MapPin className="h-5 w-5" />
+            </Button>
+            {event?.whatsapp_phone && (
+              <a
+                href={`https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center h-10 w-10 text-white hover:bg-white/20 rounded-lg transition-all"
+                title="WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </a>
+            )}
           </div>
-
-          {/* Mobile Drawer */}
-          <Drawer open={navDrawerOpen} onOpenChange={setNavDrawerOpen}>
-            <DrawerContent className="rounded-t-3xl">
-              <DrawerHeader className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <DrawerTitle className="font-display text-2xl">Menu</DrawerTitle>
-                  <p className="text-xs text-muted-foreground mt-1">Explorar o evento</p>
-                </div>
-                <DrawerClose asChild>
-                  <Button size="icon" variant="ghost" className="h-10 w-10">
-                    <X className="h-5 w-5" />
-                  </Button>
-                </DrawerClose>
-              </DrawerHeader>
-              <div className="flex flex-col gap-3 px-4 py-6 pb-8">
-                <MobileNavItem
-                  icon={GiftIcon}
-                  label="Presentes"
-                  onClick={() => {
-                    setView("presentes");
-                    setNavDrawerOpen(false);
-                  }}
-                />
-                <MobileNavItem
-                  icon={MessageSquare}
-                  label="Recados"
-                  onClick={() => {
-                    setView("recado");
-                    setNavDrawerOpen(false);
-                  }}
-                />
-                <MobileNavItem
-                  icon={MapPin}
-                  label="Endereço"
-                  onClick={() => {
-                    setAddressOpen(true);
-                    setNavDrawerOpen(false);
-                  }}
-                  disabled={!fullAddress}
-                />
-                {event?.whatsapp_phone && (
-                  <a
-                    href={`https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-lg border-2 border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:border-white/40 hover:bg-white/15"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    WhatsApp
-                  </a>
-                )}
-                <div className="my-2 border-t border-white/10" />
-                <Button
-                  className="mt-2 w-full rounded-lg h-12 text-base sm:h-11 sm:text-sm"
-                  onClick={() => {
-                    setRsvpOpen(true);
-                    setNavDrawerOpen(false);
-                  }}
-                >
-                  ♡ Confirmar Presença
-                </Button>
-              </div>
-            </DrawerContent>
-          </Drawer>
 
           <section className="flex flex-1 items-center justify-center px-1 py-6 sm:py-8">
             <div className="w-full max-w-md rounded-2xl border border-white/80 bg-white/92 px-6 py-7 shadow-premium backdrop-blur-xl sm:px-8 sm:py-8">
@@ -599,31 +555,6 @@ function PublicPage() {
         fullAddress={fullAddress}
       />
     </div>
-  );
-}
-
-function MobileNavItem({
-  icon: Icon,
-  label,
-  onClick,
-  disabled,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center gap-4 rounded-lg border-2 border-white/20 bg-gradient-to-r from-white/8 to-white/4 px-5 py-4 text-base font-semibold text-white transition-all hover:border-white/40 hover:from-white/15 hover:to-white/10 hover:shadow-lg ${
-        disabled ? "pointer-events-none opacity-40" : ""
-      }`}
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      {label}
-    </button>
   );
 }
 
