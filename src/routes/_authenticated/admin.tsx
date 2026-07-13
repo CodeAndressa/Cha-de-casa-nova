@@ -54,31 +54,31 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-secondary/40">
       <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.3em] text-terracotta">Painel</p>
-            <h1 className="font-display text-2xl">Administração</h1>
+            <h1 className="font-display text-xl sm:text-2xl">Administração</h1>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm" className="rounded-full">
-              <Link to="/"><Home className="mr-2 h-4 w-4" />Ver site</Link>
+            <Button asChild variant="outline" size="sm" className="rounded-full gap-1">
+              <Link to="/"><Home className="h-4 w-4" /><span className="hidden sm:inline">Ver site</span></Link>
             </Button>
-            <Button onClick={signOut} variant="outline" size="sm" className="rounded-full">
-              <LogOut className="mr-2 h-4 w-4" />Sair
+            <Button onClick={signOut} variant="outline" size="sm" className="rounded-full gap-1">
+              <LogOut className="h-4 w-4" /><span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <Tabs defaultValue="dashboard">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="gifts">Presentes</TabsTrigger>
-            <TabsTrigger value="photos">Fotos</TabsTrigger>
-            <TabsTrigger value="event">Evento</TabsTrigger>
-            <TabsTrigger value="rsvps">Confirmados</TabsTrigger>
-            <TabsTrigger value="messages">Mensagens</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 gap-1 bg-transparent sm:grid-cols-3 lg:grid-cols-6 lg:gap-0">
+            <TabsTrigger value="dashboard" className="rounded-lg sm:rounded-none">Dashboard</TabsTrigger>
+            <TabsTrigger value="gifts" className="rounded-lg sm:rounded-none">Presentes</TabsTrigger>
+            <TabsTrigger value="photos" className="rounded-lg sm:rounded-none">Fotos</TabsTrigger>
+            <TabsTrigger value="event" className="rounded-lg sm:rounded-none">Evento</TabsTrigger>
+            <TabsTrigger value="rsvps" className="rounded-lg sm:rounded-none">Confirmados</TabsTrigger>
+            <TabsTrigger value="messages" className="rounded-lg sm:rounded-none">Mensagens</TabsTrigger>
           </TabsList>
           <TabsContent value="dashboard" className="mt-6"><Dashboard /></TabsContent>
           <TabsContent value="gifts" className="mt-6"><GiftsTab /></TabsContent>
@@ -117,11 +117,11 @@ function Dashboard() {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {stats.map((s) => (
-        <Card key={s.label} className="rounded-2xl p-5">
+        <Card key={s.label} className="rounded-2xl p-4 sm:p-5">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">{s.label}</p>
-          <p className="mt-2 font-display text-4xl">{s.value}</p>
+          <p className="mt-2 font-display text-3xl sm:text-4xl">{s.value}</p>
         </Card>
       ))}
     </div>
@@ -185,9 +185,9 @@ function GiftsTab() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">Arraste pelo <GripVertical className="inline h-3 w-3" /> para reordenar.</p>
-        <Button onClick={() => setEditing({ name: "", category: "outros", quantity: 1, status: "disponivel" })} className="rounded-full">
+        <Button onClick={() => setEditing({ name: "", category: "outros", quantity: 1, status: "disponivel" })} className="rounded-lg">
           <Plus className="mr-2 h-4 w-4" /> Novo presente
         </Button>
       </div>
@@ -236,19 +236,19 @@ function SortableGiftRow({ gift: g, onEdit, onDelete }: { gift: Gift; onEdit: ()
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="truncate font-medium">{g.name}</h3>
-          <Badge variant="secondary">{categoryLabel(g.category)}</Badge>
-          <Badge className={
+          <h3 className="truncate font-medium text-sm">{g.name}</h3>
+          <Badge variant="secondary" className="text-xs">{categoryLabel(g.category)}</Badge>
+          <Badge className={`text-xs ${
             g.status === "disponivel" ? "bg-olive text-olive-foreground"
             : g.status === "reservado" ? "bg-accent text-accent-foreground"
             : "bg-terracotta text-terracotta-foreground"
-          }>{statusLabel(g.status)}</Badge>
+          }`}>{statusLabel(g.status)}</Badge>
         </div>
-        <p className="text-sm text-muted-foreground">{formatBRL(g.estimated_value)} · qtd {g.quantity}</p>
+        <p className="text-xs text-muted-foreground">{formatBRL(g.estimated_value)} · qtd {g.quantity}</p>
       </div>
       <div className="flex gap-2">
-        <Button size="icon" variant="outline" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
-        <Button size="icon" variant="outline" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
+        <Button size="sm" variant="outline" onClick={onEdit} className="h-9 w-9 p-0"><Pencil className="h-4 w-4" /></Button>
+        <Button size="sm" variant="outline" onClick={onDelete} className="h-9 w-9 p-0"><Trash2 className="h-4 w-4" /></Button>
       </div>
     </Card>
   );
@@ -294,14 +294,14 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-full max-w-lg sm:max-w-md">
         <DialogHeader><DialogTitle className="font-display text-2xl">{form.id ? "Editar" : "Novo"} presente</DialogTitle></DialogHeader>
-        <div className="grid max-h-[65vh] gap-3 overflow-y-auto pr-1">
+        <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
           <div>
             <Label>Nome</Label>
-            <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} className="text-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Categoria</Label>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as GiftCategory })}>
@@ -319,47 +319,48 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
           </div>
           <div>
             <Label>Descrição</Label>
-            <Textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+            <Textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="text-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Valor estimado (R$)</Label>
-              <Input type="number" step="0.01" value={form.estimated_value ?? ""} onChange={(e) => setForm({ ...form, estimated_value: e.target.value ? Number(e.target.value) : null })} />
+              <Input type="number" step="0.01" value={form.estimated_value ?? ""} onChange={(e) => setForm({ ...form, estimated_value: e.target.value ? Number(e.target.value) : null })} className="text-base" />
             </div>
             <div>
               <Label>Quantidade</Label>
-              <Input type="number" min={1} value={form.quantity ?? 1} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+              <Input type="number" min={1} value={form.quantity ?? 1} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} className="text-base" />
             </div>
           </div>
           <div>
             <Label>URL da imagem</Label>
-            <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+            <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." className="text-base" />
           </div>
           <div>
             <div className="mb-2 flex items-center justify-between">
               <Label>Links de compra</Label>
-              <Button type="button" size="sm" variant="outline" onClick={addLink} className="h-7 gap-1 rounded-full px-2.5 text-xs">
-                <Plus className="h-3 w-3" /> Adicionar link
+              <Button type="button" size="sm" variant="outline" onClick={addLink} className="h-7 gap-1 rounded-lg px-2.5 text-xs">
+                <Plus className="h-3 w-3" /> Adicionar
               </Button>
             </div>
             {links.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum link ainda. Adicione links de lojas como Amazon, Mercado Livre etc.</p>
+              <p className="text-xs text-muted-foreground">Nenhum link ainda. Adicione links de lojas.</p>
             )}
             <div className="space-y-2">
               {links.map((link, i) => (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="flex flex-col gap-2 sm:flex-row sm:gap-1">
                   <Input
                     placeholder="Amazon"
                     value={link.label}
                     onChange={(e) => updateLink(i, "label", e.target.value)}
-                    className="w-28 shrink-0"
+                    className="w-full sm:w-24 shrink-0 text-base"
                   />
                   <Input
                     placeholder="https://..."
                     value={link.url}
                     onChange={(e) => updateLink(i, "url", e.target.value)}
+                    className="flex-1 text-base"
                   />
-                  <Button type="button" size="icon" variant="outline" onClick={() => removeLink(i)} className="shrink-0">
+                  <Button type="button" size="icon" variant="outline" onClick={() => removeLink(i)} className="shrink-0 sm:h-10 sm:w-10">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -367,9 +368,9 @@ function GiftFormDialog({ gift, onClose, onSaved }: { gift: Partial<Gift> | null
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>Salvar</Button>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={onClose} className="order-2 sm:order-1">Cancelar</Button>
+          <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending} className="order-1 sm:order-2">Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -483,7 +484,7 @@ function PhotosTab() {
       </div>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-lg sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{form.id ? "Editar" : "Nova"} foto</DialogTitle>
           </DialogHeader>

@@ -19,6 +19,8 @@ import {
   Leaf,
   Flame,
   Ruler,
+  Menu,
+  X,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
@@ -36,6 +38,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerClose,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Card } from "@/components/ui/card";
 import {
   CATEGORIES,
@@ -226,6 +235,7 @@ function PublicPage() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
+  const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const pixSectionRef = useRef<HTMLDivElement>(null);
 
   const handleReserve = (g: Gift) => {
@@ -239,6 +249,10 @@ function PublicPage() {
   const copyPix = async () => {
     if (!event?.pix_key) return;
     await navigator.clipboard.writeText(event.pix_key);
+    // Haptic feedback on mobile
+    if ("vibrate" in navigator) {
+      navigator.vibrate(50);
+    }
     toast.success("Chave Pix copiada!");
   };
 
@@ -255,8 +269,9 @@ function PublicPage() {
       <div
         className={`relative z-10 flex h-full flex-col ${view !== "hero" ? "hidden" : ""}`}
       >
-        <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
-          <nav className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-soft backdrop-blur-xl">
+        <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-4 py-3 sm:px-6 lg:px-8">
+          {/* Desktop Nav */}
+          <nav className="hidden shrink-0 items-center gap-0.5 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-soft backdrop-blur-xl md:flex">
             <span className="mr-auto font-display text-xl tracking-wide text-white">
               Chá de Casa Nova
             </span>
@@ -283,6 +298,82 @@ function PublicPage() {
               Confirmar
             </Button>
           </nav>
+
+          {/* Mobile Nav */}
+          <div className="flex md:hidden shrink-0 items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-soft backdrop-blur-xl">
+            <span className="font-display text-lg tracking-wide text-white">
+              Chá de Casa Nova
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setNavDrawerOpen(true)}
+              className="text-white hover:bg-white/20"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Mobile Drawer */}
+          <Drawer open={navDrawerOpen} onOpenChange={setNavDrawerOpen}>
+            <DrawerContent>
+              <DrawerHeader className="flex items-center justify-between">
+                <DrawerTitle>Menu</DrawerTitle>
+                <DrawerClose asChild>
+                  <Button size="icon" variant="ghost">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </DrawerClose>
+              </DrawerHeader>
+              <div className="flex flex-col gap-2 px-4 pb-8">
+                <MobileNavItem
+                  icon={GiftIcon}
+                  label="Presentes"
+                  onClick={() => {
+                    setView("presentes");
+                    setNavDrawerOpen(false);
+                  }}
+                />
+                <MobileNavItem
+                  icon={MessageSquare}
+                  label="Recados"
+                  onClick={() => {
+                    setView("recado");
+                    setNavDrawerOpen(false);
+                  }}
+                />
+                <MobileNavItem
+                  icon={MapPin}
+                  label="Endereço"
+                  onClick={() => {
+                    setAddressOpen(true);
+                    setNavDrawerOpen(false);
+                  }}
+                  disabled={!fullAddress}
+                />
+                {event?.whatsapp_phone && (
+                  <a
+                    href={`https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/15"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </a>
+                )}
+                <Button
+                  className="mt-2 w-full rounded-lg"
+                  onClick={() => {
+                    setRsvpOpen(true);
+                    setNavDrawerOpen(false);
+                  }}
+                >
+                  Confirmar Presença
+                </Button>
+              </div>
+            </DrawerContent>
+          </Drawer>
 
           <section className="flex flex-1 items-center justify-center px-1 py-6 sm:py-8">
             <div className="w-full max-w-md rounded-2xl border border-white/80 bg-white/92 px-6 py-7 shadow-premium backdrop-blur-xl sm:px-8 sm:py-8">
@@ -324,9 +415,9 @@ function PublicPage() {
                   ].map((x) => (
                     <div
                       key={x.label}
-                      className="rounded-xl border border-forest/20 bg-gradient-to-b from-white/90 to-secondary/60 px-2 py-4 text-center shadow-soft"
+                      className="rounded-lg border border-forest/20 bg-gradient-to-b from-white/90 to-secondary/60 px-2 py-3 text-center shadow-soft will-change-transform"
                     >
-                      <div className="font-display text-3xl font-semibold leading-none text-forest">
+                      <div className="font-display text-2xl sm:text-3xl font-semibold leading-none text-forest">
                         {String(x.v).padStart(2, "0")}
                       </div>
                       <div className="mt-1.5 text-[9px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -339,7 +430,7 @@ function PublicPage() {
 
               <div className="mt-6">
                 <Button
-                  className="h-11 w-full rounded-xl text-sm"
+                  className="h-12 w-full rounded-xl text-base sm:h-11 sm:text-sm"
                   onClick={() => setRsvpOpen(true)}
                 >
                   Confirmar presença
@@ -356,7 +447,7 @@ function PublicPage() {
       >
         <SubNav title="Lista de presentes" onBack={() => setView("hero")} />
         <div className="flex-1 overflow-y-auto">
-          <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
                 Todas
@@ -372,7 +463,7 @@ function PublicPage() {
               ))}
             </div>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((g) => (
                 <GiftCard key={g.id} gift={g} hideDescription={isPixCota(g)} onReserve={() => handleReserve(g)} />
               ))}
@@ -385,7 +476,7 @@ function PublicPage() {
           </section>
 
           {/* ── COTAS PIX ── */}
-          <section ref={pixSectionRef} className="px-5 pb-8 sm:px-8">
+          <section ref={pixSectionRef} className="px-4 pb-8 sm:px-6">
             <div className="mx-auto max-w-5xl">
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/45">
                 Contribuições via Pix
@@ -396,7 +487,7 @@ function PublicPage() {
               <p className="mt-2 text-center text-sm text-white/55">
                 Escolha uma ideia e contribua com o valor que quiser
               </p>
-              <div className="mt-7 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+              <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {gifts.filter(isPixCota).map((g) => (
                   <PixCotaGiftCard
                     key={g.id}
@@ -421,31 +512,31 @@ function PublicPage() {
 
           {/* ── CHAVE PIX (outro valor) ── */}
           {(event?.pix_key || event?.pix_qr_url) && (
-            <section className="px-5 pb-16 sm:px-8">
-              <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-white/6 px-6 py-5 backdrop-blur-sm sm:px-8">
+            <section className="px-4 pb-16 sm:px-6">
+              <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-white/6 px-4 py-5 backdrop-blur-sm sm:px-8">
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-white/40">
                   Ou envie o valor que preferir
                 </p>
-                <div className="flex flex-wrap items-center gap-5">
+                <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   {event?.pix_qr_url && (
                     <img
                       src={event.pix_qr_url}
                       alt="QR Code Pix"
-                      className="h-28 w-28 rounded-xl border border-white/20 bg-white p-1.5"
+                      className="h-32 w-32 rounded-xl border border-white/20 bg-white p-2 shrink-0"
                     />
                   )}
-                  <div className="min-w-0 flex-1 space-y-3">
+                  <div className="w-full space-y-4">
                     {event?.pix_owner && (
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-white/40">Titular</p>
-                        <p className="text-sm font-medium text-white/80">{event.pix_owner}</p>
+                        <p className="mt-1 text-sm font-medium text-white/80">{event.pix_owner}</p>
                       </div>
                     )}
                     {event?.pix_key && (
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-white/40">Chave Pix</p>
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <code className="flex-1 truncate rounded-xl border border-white/15 bg-white/8 px-3 py-2 text-sm text-white/80">
+                        <div className="mt-2 flex gap-2">
+                          <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/8 px-3 py-2.5 text-sm font-mono text-white/80">
                             {event.pix_key}
                           </code>
                           <Button
@@ -453,7 +544,7 @@ function PublicPage() {
                             variant="secondary"
                             onClick={copyPix}
                             aria-label="Copiar chave Pix"
-                            className="rounded-xl"
+                            className="rounded-lg h-11 w-11 shrink-0"
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -476,9 +567,9 @@ function PublicPage() {
       >
         <SubNav title="Deixe um recado" onBack={() => setView("hero")} />
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+          <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
             <RecadoForm />
-          </div>
+          </section>
           <MiniFooter whatsappPhone={event?.whatsapp_phone} />
         </div>
       </div>
@@ -504,6 +595,31 @@ function PublicPage() {
         fullAddress={fullAddress}
       />
     </div>
+  );
+}
+
+function MobileNavItem({
+  icon: Icon,
+  label,
+  onClick,
+  disabled,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex items-center gap-3 rounded-lg border border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/15 ${
+        disabled ? "pointer-events-none opacity-50" : ""
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
   );
 }
 
@@ -538,7 +654,7 @@ function FloatingPhotoBackground({
 
 function SubNav({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[oklch(0.20_0.08_155)]/95 px-5 py-4 backdrop-blur-xl">
+    <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[oklch(0.20_0.08_155)]/95 px-4 py-3 sm:px-6 backdrop-blur-xl">
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm font-medium text-white/70 transition hover:text-white"
@@ -554,7 +670,7 @@ function SubNav({ title, onBack }: { title: string; onBack: () => void }) {
 
 function MiniFooter({ whatsappPhone }: { whatsappPhone?: string | null }) {
   return (
-    <footer className="px-5 pb-10 pt-4 text-center sm:px-8">
+    <footer className="px-4 pb-8 pt-4 text-center sm:px-6">
       {whatsappPhone && (
         <a
           href={`https://wa.me/${whatsappPhone.replace(/\D/g, "")}`}
@@ -635,7 +751,7 @@ function AddressDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="w-11/12 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Endereço</DialogTitle>
           <DialogDescription>Como chegar no nosso novo lar</DialogDescription>
@@ -725,7 +841,7 @@ function GiftCard({ gift, onReserve, hideDescription }: { gift: Gift; onReserve:
           <span className="text-sm font-semibold text-foreground">
             {formatBRL(gift.estimated_value)}
           </span>
-          <Button size="sm" disabled={!isAvailable} onClick={onReserve} className="rounded-xl">
+          <Button size="sm" disabled={!isAvailable} onClick={onReserve} className="rounded-lg px-4 py-2 h-10">
             {isAvailable ? "Quero presentear" : "Indisponível"}
           </Button>
         </div>
@@ -842,7 +958,7 @@ function PixTierDialog({
 
   return (
     <Dialog open={!!tier} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="w-11/12 rounded-2xl">
         <DialogHeader>
           {tier && <tier.icon className="h-10 w-10 text-forest" />}
           <DialogTitle className="mt-3 font-display text-3xl">{tier?.label}</DialogTitle>
@@ -862,15 +978,15 @@ function PixTierDialog({
               Chave Pix
             </p>
             <div className="flex gap-2">
-              <code className="flex-1 truncate rounded-xl border bg-secondary px-3 py-2 text-sm">
+              <code className="flex-1 truncate rounded-xl border bg-secondary px-3 py-3 text-sm font-mono text-white/80">
                 {pixKey}
               </code>
-              <Button size="icon" variant="outline" onClick={copyKey} className="shrink-0 rounded-xl">
+              <Button size="icon" variant="outline" onClick={copyKey} className="shrink-0 rounded-xl h-11 w-11">
                 {copied ? <Check className="h-4 w-4 text-moss" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
             {pixOwner && (
-              <p className="mt-1 text-xs text-muted-foreground">Titular: {pixOwner}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Titular: {pixOwner}</p>
             )}
           </div>
         )}
@@ -883,14 +999,18 @@ function PixTierDialog({
             onChange={(e) => setName(e.target.value)}
             placeholder="Para sabermos quem mandou o carinho"
             maxLength={100}
+            className="text-base"
           />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={onClose} className="order-2 sm:order-1">
+            Cancelar
+          </Button>
           <Button
             onClick={() => mutation.mutate()}
             disabled={!name.trim() || mutation.isPending}
+            className="order-1 sm:order-2 h-12 sm:h-10"
           >
             <Heart className="mr-2 h-4 w-4" />
             Vou presentear assim!
@@ -944,7 +1064,7 @@ function ReserveDialog({
 
   return (
     <Dialog open={!!gift} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-11/12 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Quero presentear</DialogTitle>
           <DialogDescription>{gift?.name}</DialogDescription>
@@ -957,6 +1077,7 @@ function ReserveDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
+              className="text-base"
               required
             />
           </div>
@@ -968,6 +1089,7 @@ function ReserveDialog({
               onChange={(e) => setPhone(e.target.value)}
               maxLength={30}
               placeholder="(11) 99999-9999"
+              className="text-base"
             />
           </div>
           <div>
@@ -977,23 +1099,24 @@ function ReserveDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={500}
-              rows={3}
+              rows={4}
+              className="text-base"
             />
           </div>
           <div>
             <Label>Você deseja</Label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => setStatus("reservado")}
-                className={`rounded-xl border p-3 text-sm transition-all ${status === "reservado" ? "border-primary bg-secondary" : "border-border"}`}
+                className={`rounded-lg border p-4 text-sm font-medium transition-all ${status === "reservado" ? "border-primary bg-secondary" : "border-border"}`}
               >
                 Reservar (vou levar)
               </button>
               <button
                 type="button"
                 onClick={() => setStatus("presenteado")}
-                className={`rounded-xl border p-3 text-sm transition-all ${status === "presenteado" ? "border-primary bg-secondary" : "border-border"}`}
+                className={`rounded-lg border p-4 text-sm font-medium transition-all ${status === "presenteado" ? "border-primary bg-secondary" : "border-border"}`}
               >
                 Já presenteado
               </button>
@@ -1044,7 +1167,7 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-11/12 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Confirmar presença</DialogTitle>
           <DialogDescription>Mal podemos esperar para receber você.</DialogDescription>
@@ -1057,9 +1180,10 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
+              className="text-base"
             />
           </div>
-          <div className="grid grid-cols-[1fr_100px] gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_100px]">
             <div>
               <Label htmlFor="v-phone">Telefone</Label>
               <Input
@@ -1067,6 +1191,7 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 maxLength={30}
+                className="text-base"
               />
             </div>
             <div>
@@ -1078,6 +1203,7 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
                 max={20}
                 value={guests}
                 onChange={(e) => setGuests(Math.max(1, Number(e.target.value)))}
+                className="text-base"
               />
             </div>
           </div>
@@ -1088,7 +1214,8 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={500}
-              rows={3}
+              rows={4}
+              className="text-base"
             />
           </div>
         </div>
@@ -1136,6 +1263,7 @@ function RecadoForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={100}
+            className="text-base"
           />
         </div>
         <div>
@@ -1145,11 +1273,12 @@ function RecadoForm() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             maxLength={1000}
-            rows={5}
+            rows={6}
+            className="text-base"
           />
         </div>
         <Button
-          className="w-full rounded-xl"
+          className="h-12 w-full rounded-xl text-base sm:h-11 sm:text-sm"
           onClick={() => mutation.mutate()}
           disabled={!name.trim() || !message.trim() || mutation.isPending}
         >
