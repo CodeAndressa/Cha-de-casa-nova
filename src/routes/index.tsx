@@ -64,11 +64,11 @@ type PixTier = {
 };
 
 const PIX_TIERS: PixTier[] = [
-  { id: "despensa",  icon: ShoppingCart,    value: 50,  label: "Despensa cheia",     description: "Ajude a abastecer a despensa do nosso novo lar" },
-  { id: "jantar",   icon: UtensilsCrossed,  value: 100, label: "Primeiro jantar",    description: "O primeiro jantar especial na casa nova" },
-  { id: "decoracao",icon: Leaf,             value: 150, label: "Decoração",          description: "Detalhes que deixam a casa com a nossa cara" },
-  { id: "churras",  icon: Flame,            value: 200, label: "Noite de churras",   description: "Jogo do Coxa na TV, cerveja gelada e churrasqueira ligada" },
-  { id: "moveis",   icon: Ruler,            value: 300, label: "Projeto dos móveis", description: "Contribua com o projeto dos móveis" },
+  { id: "sofazinho",  icon: ShoppingCart,    value: 100,  label: "Pé do sofá",         description: "Contribua com parte do sofá que queremos" },
+  { id: "sofamedio",   icon: Ruler,          value: 300, label: "Encosto sofá",       description: "Uma boa contribuição pro nosso sofá" },
+  { id: "sofagande",icon: Leaf,             value: 500, label: "Sofá completo",      description: "Você vai estar na gente todos os dias!" },
+  { id: "sofaplus",  icon: Flame,            value: 800, label: "Sofá + mesa",   description: "Sofá E mesa de centro pra completar" },
+  { id: "sofa360",   icon: Heart,            value: 1200, label: "Décor completa", description: "Sofá, mesa, luminária — o set COMPLETO" },
 ];
 
 const TIER_GRADIENTS = [
@@ -142,7 +142,7 @@ type CouplePhoto = {
   caption: string | null;
 };
 
-type View = "hero" | "presentes" | "recado";
+type View = "hero" | "contribuicoes" | "recado";
 
 function PublicPage() {
   const qc = useQueryClient();
@@ -201,11 +201,6 @@ function PublicPage() {
   const isPixCota = (g: Gift) => !!g.description?.toLowerCase().startsWith("cota pix");
 
   const [view, setView] = useState<View>("hero");
-  const [filter, setFilter] = useState<"all" | GiftCategory>("all");
-  const filtered = useMemo(() => {
-    const base = filter === "all" ? gifts : gifts.filter((g) => g.category === filter);
-    return base.filter((g) => !isPixCota(g));
-  }, [gifts, filter]);
 
   const eventDateTime = useMemo(() => {
     const date = event?.event_date ?? OPEN_HOUSE_DATE;
@@ -222,19 +217,9 @@ function PublicPage() {
     .filter(Boolean)
     .join(", ");
 
-  const [reserveGift, setReserveGift] = useState<Gift | null>(null);
-  const [rsvpOpen, setRsvpOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
   const pixSectionRef = useRef<HTMLDivElement>(null);
-
-  const handleReserve = (g: Gift) => {
-    if (isPixCota(g)) {
-      pixSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      setReserveGift(g);
-    }
-  };
 
   const copyPix = async () => {
     if (!event?.pix_key) return;
@@ -265,7 +250,7 @@ function PublicPage() {
             <span className="mr-auto font-display text-xl tracking-wide text-white">
               Chá de Casa Nova
             </span>
-            <NavButton onClick={() => setView("presentes")} icon={GiftIcon} label="Presentes" />
+            <NavButton onClick={() => setView("contribuicoes")} icon={Heart} label="Contribuições" />
             <NavButton onClick={() => setView("recado")} icon={MessageSquare} label="Recados" />
             <NavButton
               onClick={() => setAddressOpen(true)}
@@ -297,11 +282,11 @@ function PublicPage() {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => setView("presentes")}
+              onClick={() => setView("contribuicoes")}
               className="h-10 w-10 text-white hover:bg-white/20 rounded-lg transition-all"
-              title="Presentes"
+              title="Contribuições"
             >
-              <GiftIcon className="h-5 w-5" />
+              <Heart className="h-5 w-5" />
             </Button>
             <Button
               size="icon"
@@ -401,68 +386,25 @@ function PublicPage() {
         </div>
       </div>
 
-      {/* ── PRESENTES VIEW ── */}
+      {/* ── CONTRIBUIÇÕES VIEW ── */}
       <div
-        className={`relative z-10 flex h-full flex-col ${view !== "presentes" ? "hidden" : ""}`}
+        className={`relative z-10 flex h-full flex-col ${view !== "contribuicoes" ? "hidden" : ""}`}
       >
-        <SubNav title="Lista de presentes" onBack={() => setView("hero")} />
+        <SubNav title="Contribuições via PIX" onBack={() => setView("hero")} />
         <div className="flex-1 overflow-y-auto">
-          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
-                Todas
-              </FilterChip>
-              {CATEGORIES.map((c) => (
-                <FilterChip
-                  key={c.value}
-                  active={filter === c.value}
-                  onClick={() => setFilter(c.value)}
-                >
-                  {c.label}
-                </FilterChip>
-              ))}
-            </div>
-
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((g) => (
-                <GiftCard key={g.id} gift={g} hideDescription={isPixCota(g)} onReserve={() => handleReserve(g)} />
-              ))}
-              {filtered.length === 0 && (
-                <p className="col-span-full rounded-2xl border border-white/15 bg-white/8 px-5 py-10 text-center text-sm text-white/55 backdrop-blur">
-                  Nenhum presente nesta categoria.
-                </p>
-              )}
-            </div>
-          </section>
-
           {/* ── COTAS PIX ── */}
-          <section ref={pixSectionRef} className="px-4 pb-8 sm:px-6">
+          <section ref={pixSectionRef} className="px-4 pt-8 pb-8 sm:px-6">
             <div className="mx-auto max-w-5xl">
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/45">
-                Contribuições via Pix
+                Contribuições PIX
               </p>
               <h2 className="mt-2 text-center font-display text-4xl text-white sm:text-5xl">
-                Ajude a montar o nosso lar
+                Já temos tudo em casa
               </h2>
               <p className="mt-2 text-center text-sm text-white/55">
-                Escolha uma ideia e contribua com o valor que quiser
+                O que mais precisamos é de dinheiro para comprar o sofá dos nossos sonhos! Escolha uma categoria ou envie o valor que quiser
               </p>
               <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {gifts.filter(isPixCota).map((g) => (
-                  <PixCotaGiftCard
-                    key={g.id}
-                    gift={g}
-                    onClick={() =>
-                      setSelectedTier({
-                        id: g.id,
-                        icon: GiftIcon,
-                        value: g.estimated_value ?? 50,
-                        label: g.name,
-                        description: "Deixa a gente escolher — você só precisa fazer o Pix",
-                      })
-                    }
-                  />
-                ))}
                 {PIX_TIERS.map((tier, i) => (
                   <PixTierCard key={tier.id} tier={tier} index={i} onClick={() => setSelectedTier(tier)} />
                 ))}
@@ -470,12 +412,10 @@ function PublicPage() {
             </div>
           </section>
 
-          {/* ── CHAVE PIX (outro valor) ── */}
-          {(event?.pix_key || event?.pix_qr_url) && (
             <section className="px-4 pb-16 sm:px-6">
               <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-white/6 px-4 py-5 backdrop-blur-sm sm:px-8">
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-white/40">
-                  Ou envie o valor que preferir
+                  Ou contribua com qualquer valor
                 </p>
                 <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   {event?.pix_qr_url && (
@@ -515,7 +455,6 @@ function PublicPage() {
                 </div>
               </div>
             </section>
-          )}
 
           <MiniFooter whatsappPhone={event?.whatsapp_phone} />
         </div>
@@ -534,14 +473,6 @@ function PublicPage() {
         </div>
       </div>
 
-      <ReserveDialog
-        gift={reserveGift}
-        onClose={() => setReserveGift(null)}
-        onSuccess={() => {
-          qc.invalidateQueries({ queryKey: ["gifts"] });
-          setReserveGift(null);
-        }}
-      />
       <PixTierDialog
         tier={selectedTier}
         pixKey={event?.pix_key ?? null}
@@ -731,102 +662,6 @@ function FilterChip({
   );
 }
 
-function GiftCard({ gift, onReserve, hideDescription }: { gift: Gift; onReserve: () => void; hideDescription?: boolean }) {
-  const isAvailable = gift.status === "disponivel";
-  const links = parseGiftLinks(gift.external_link);
-
-  return (
-    <Card className="group overflow-hidden rounded-2xl border-white/70 bg-white/90 p-0 shadow-card backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-premium">
-      <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-        {gift.image_url ? (
-          <img
-            src={gift.image_url}
-            alt={gift.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-sand to-secondary">
-            <GiftIcon className="h-12 w-12 text-muted-foreground/40" />
-          </div>
-        )}
-        <Badge
-          className={`absolute left-3 top-3 rounded-full border-0 text-xs ${
-            gift.status === "disponivel"
-              ? "bg-olive text-olive-foreground"
-              : gift.status === "reservado"
-                ? "bg-accent text-accent-foreground"
-                : "bg-forest text-forest-foreground"
-          }`}
-        >
-          {statusLabel(gift.status)}
-        </Badge>
-      </div>
-      <div className="p-5">
-        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-          {categoryLabel(gift.category)}
-        </p>
-        <h3 className="mt-1 font-display text-2xl leading-tight text-forest">{gift.name}</h3>
-        {gift.description && !hideDescription && (
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-            {gift.description}
-          </p>
-        )}
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-foreground">
-            {formatBRL(gift.estimated_value)}
-          </span>
-          <Button size="sm" disabled={!isAvailable} onClick={onReserve} className="rounded-lg px-4 py-2 h-10">
-            {isAvailable ? "Quero presentear" : "Indisponível"}
-          </Button>
-        </div>
-        {links.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {links.map((link, i) => (
-              <a
-                key={i}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-full border border-forest/20 bg-secondary px-2.5 py-1 text-xs font-medium text-forest transition-colors hover:bg-forest/10"
-              >
-                <ExternalLink className="h-3 w-3 shrink-0" />
-                {link.label || "Ver produto"}
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function PixCotaGiftCard({ gift, onClick }: { gift: Gift; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group relative overflow-hidden rounded-2xl border border-white/15 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-white/35 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.38_0.13_152)] to-[oklch(0.24_0.09_158)]" />
-      <div className="relative flex h-full flex-col p-5">
-        <GiftIcon className="h-9 w-9 text-white/75" />
-        <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
-          {formatBRL(gift.estimated_value)}
-        </span>
-        <h3 className="mt-2 font-display text-xl leading-tight text-white">{gift.name}</h3>
-        <p className="mt-1.5 text-[11px] leading-5 text-white/60">
-          A gente compra com carinho e não conta pra ninguém
-        </p>
-        <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
-          <Heart className="h-3 w-3" />
-          Contribuir
-        </div>
-      </div>
-    </button>
-  );
-}
-
 function PixTierCard({ tier, index, onClick }: { tier: PixTier; index: number; onClick: () => void }) {
   return (
     <button
@@ -949,121 +784,6 @@ function PixTierDialog({
           >
             <Heart className="mr-2 h-4 w-4" />
             Vou presentear assim!
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ReserveDialog({
-  gift,
-  onClose,
-  onSuccess,
-}: {
-  gift: Gift | null;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"reservado" | "presenteado">("reservado");
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!isSupabaseConfigured)
-        throw new Error("Configure as variaveis do Supabase para reservar presentes.");
-      if (!gift) return;
-      const { error } = await supabase.rpc("reserve_gift", {
-        _gift_id: gift.id,
-        _guest_name: name.trim(),
-        _phone: phone.trim() || "",
-        _message: message.trim() || "",
-        _status: status,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success(
-        status === "presenteado" ? "Obrigado pelo presente!" : "Presente reservado com sucesso!",
-      );
-      setName("");
-      setPhone("");
-      setMessage("");
-      setStatus("reservado");
-      onSuccess();
-    },
-    onError: (e: Error) => toast.error(e.message || "Não foi possível reservar"),
-  });
-
-  return (
-    <Dialog open={!!gift} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-11/12 rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Quero presentear</DialogTitle>
-          <DialogDescription>{gift?.name}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="r-name">Seu nome</Label>
-            <Input
-              id="r-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              className="text-base"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="r-phone">Telefone</Label>
-            <Input
-              id="r-phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              maxLength={30}
-              placeholder="(11) 99999-9999"
-              className="text-base"
-            />
-          </div>
-          <div>
-            <Label htmlFor="r-msg">Mensagem (opcional)</Label>
-            <Textarea
-              id="r-msg"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              maxLength={500}
-              rows={4}
-              className="text-base"
-            />
-          </div>
-          <div>
-            <Label>Você deseja</Label>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setStatus("reservado")}
-                className={`rounded-lg border p-4 text-sm font-medium transition-all ${status === "reservado" ? "border-primary bg-secondary" : "border-border"}`}
-              >
-                Reservar (vou levar)
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatus("presenteado")}
-                className={`rounded-lg border p-4 text-sm font-medium transition-all ${status === "presenteado" ? "border-primary bg-secondary" : "border-border"}`}
-              >
-                Já presenteado
-              </button>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!name.trim() || mutation.isPending}>
-            <Check className="mr-2 h-4 w-4" /> Confirmar
           </Button>
         </DialogFooter>
       </DialogContent>
