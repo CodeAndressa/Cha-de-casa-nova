@@ -6,7 +6,7 @@ import { _ as useRouter, c as HeadContent, d as Outlet, f as lazyRouteComponent,
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { r as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DrVLb5QN.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-BNhxr6mR.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-BNjU0TCx.css";
@@ -205,7 +205,7 @@ var Route$2 = createFileRoute("/_authenticated")({
 	},
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./routes-DKsUz54m.mjs");
+var $$splitComponentImporter$1 = () => import("./routes-BGc4OByx.mjs");
 var Route$1 = createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Nosso Chá de Casa Nova" },

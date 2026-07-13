@@ -217,6 +217,7 @@ function PublicPage() {
     .filter(Boolean)
     .join(", ");
 
+  const [rsvpOpen, setRsvpOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PixTier | null>(null);
   const pixSectionRef = useRef<HTMLDivElement>(null);

@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-BsEhDyG3.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-DKtI3o1G.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/__root.tsx",
@@ -8,44 +8,44 @@ var tsrStartManifest = () => ({ routes: {
 			"/auth",
 			"/reset-password"
 		],
-		preloads: ["/assets/index-BMUI0l3l.js", "/assets/jsx-runtime-bzQ4Vb5N.js"],
+		preloads: ["/assets/index-B0jYQ8z6.js", "/assets/jsx-runtime-bzQ4Vb5N.js"],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-BMUI0l3l.js"
+			src: "/assets/index-B0jYQ8z6.js"
 		} }]
 	},
 	"/": {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/routes-BD9xc6ry.js",
-			"/assets/categories-Dbm2AlXi.js",
-			"/assets/card-0MbKE90a.js"
+			"/assets/routes-Kt97RumF.js",
+			"/assets/categories-Dfr-XEmp.js",
+			"/assets/card-Bu7S1agC.js"
 		]
 	},
 	"/_authenticated": {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/_authenticated/route.tsx",
 		children: ["/_authenticated/admin"],
-		preloads: ["/assets/route-KlbSnMz1.js"]
+		preloads: ["/assets/route-B3cs5erP.js"]
 	},
 	"/auth": {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/auth.tsx",
 		children: void 0,
-		preloads: ["/assets/auth-D12sJxUP.js", "/assets/card-0MbKE90a.js"]
+		preloads: ["/assets/auth-DRm4Ijl5.js", "/assets/card-Bu7S1agC.js"]
 	},
 	"/reset-password": {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/reset-password.tsx",
 		children: void 0,
-		preloads: ["/assets/reset-password-DF0eYSL5.js", "/assets/card-0MbKE90a.js"]
+		preloads: ["/assets/reset-password-BUajl6Ka.js", "/assets/card-Bu7S1agC.js"]
 	},
 	"/_authenticated/admin": {
 		filePath: "C:/Users/andressa.soares/Desktop/Chá de casa nova/openhouse/src/routes/_authenticated/admin.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin-DIgGOu76.js",
-			"/assets/categories-Dbm2AlXi.js",
-			"/assets/card-0MbKE90a.js"
+			"/assets/admin-BbSAmsGJ.js",
+			"/assets/categories-Dfr-XEmp.js",
+			"/assets/card-Bu7S1agC.js"
 		]
 	}
 } });

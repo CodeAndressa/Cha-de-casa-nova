@@ -7,7 +7,7 @@ import { C as ArrowLeft, S as Calendar, _ as Copy, c as MessageCircle, d as Leaf
 import { a as DialogFooter, d as formatBRL, i as DialogDescription, l as Textarea, n as Dialog, o as DialogHeader, r as DialogContent, s as DialogTitle } from "./categories-BtOHNY4l.mjs";
 import { i as useQueryClient, n as useQuery, t as useMutation } from "../_libs/tanstack__react-query.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DKsUz54m.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BGc4OByx.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var _12FD544F_BE1F_4C6D_8AEC_BD34C9294A53_default = "/assets/12FD544F-BE1F-4C6D-8AEC-BD34C9294A53-C0tIgMSi.jpg";
@@ -154,6 +154,7 @@ function PublicPage() {
 		event?.complement,
 		event?.city && event?.state ? `${event.city} - ${event.state}` : event?.city ?? event?.state
 	].filter(Boolean).join(", ");
+	const [rsvpOpen, setRsvpOpen] = (0, import_react.useState)(false);
 	const [addressOpen, setAddressOpen] = (0, import_react.useState)(false);
 	const [selectedTier, setSelectedTier] = (0, import_react.useState)(null);
 	const pixSectionRef = (0, import_react.useRef)(null);
