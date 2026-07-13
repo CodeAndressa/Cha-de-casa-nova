@@ -300,32 +300,35 @@ function PublicPage() {
           </nav>
 
           {/* Mobile Nav */}
-          <div className="flex md:hidden shrink-0 items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-soft backdrop-blur-xl">
-            <span className="font-display text-lg tracking-wide text-white">
-              Chá de Casa Nova
+          <div className="flex md:hidden shrink-0 items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-3 py-3 shadow-soft backdrop-blur-xl">
+            <span className="font-display text-sm tracking-wide text-white/60">
+              ♡
             </span>
             <Button
               size="icon"
               variant="ghost"
               onClick={() => setNavDrawerOpen(true)}
-              className="text-white hover:bg-white/20"
+              className="h-10 w-10 text-white hover:bg-white/30 hover:text-white/90 rounded-lg transition-all"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-6 w-6" />
             </Button>
           </div>
 
           {/* Mobile Drawer */}
           <Drawer open={navDrawerOpen} onOpenChange={setNavDrawerOpen}>
-            <DrawerContent>
-              <DrawerHeader className="flex items-center justify-between">
-                <DrawerTitle>Menu</DrawerTitle>
+            <DrawerContent className="rounded-t-3xl">
+              <DrawerHeader className="flex items-center justify-between border-b pb-4">
+                <div>
+                  <DrawerTitle className="font-display text-2xl">Menu</DrawerTitle>
+                  <p className="text-xs text-muted-foreground mt-1">Explorar o evento</p>
+                </div>
                 <DrawerClose asChild>
-                  <Button size="icon" variant="ghost">
-                    <X className="h-4 w-4" />
+                  <Button size="icon" variant="ghost" className="h-10 w-10">
+                    <X className="h-5 w-5" />
                   </Button>
                 </DrawerClose>
               </DrawerHeader>
-              <div className="flex flex-col gap-2 px-4 pb-8">
+              <div className="flex flex-col gap-3 px-4 py-6 pb-8">
                 <MobileNavItem
                   icon={GiftIcon}
                   label="Presentes"
@@ -356,20 +359,21 @@ function PublicPage() {
                     href={`https://wa.me/${event.whatsapp_phone.replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/15"
+                    className="flex items-center gap-3 rounded-lg border-2 border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:border-white/40 hover:bg-white/15"
                   >
                     <MessageCircle className="h-4 w-4" />
                     WhatsApp
                   </a>
                 )}
+                <div className="my-2 border-t border-white/10" />
                 <Button
-                  className="mt-2 w-full rounded-lg"
+                  className="mt-2 w-full rounded-lg h-12 text-base sm:h-11 sm:text-sm"
                   onClick={() => {
                     setRsvpOpen(true);
                     setNavDrawerOpen(false);
                   }}
                 >
-                  Confirmar Presença
+                  ♡ Confirmar Presença
                 </Button>
               </div>
             </DrawerContent>
@@ -613,11 +617,11 @@ function MobileNavItem({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center gap-3 rounded-lg border border-white/20 bg-white/8 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/15 ${
-        disabled ? "pointer-events-none opacity-50" : ""
+      className={`flex items-center gap-4 rounded-lg border-2 border-white/20 bg-gradient-to-r from-white/8 to-white/4 px-5 py-4 text-base font-semibold text-white transition-all hover:border-white/40 hover:from-white/15 hover:to-white/10 hover:shadow-lg ${
+        disabled ? "pointer-events-none opacity-40" : ""
       }`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-5 w-5 shrink-0" />
       {label}
     </button>
   );
