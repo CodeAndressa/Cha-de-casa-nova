@@ -14,11 +14,10 @@ import {
   Check,
   ArrowLeft,
   ExternalLink,
-  ShoppingCart,
-  UtensilsCrossed,
-  Leaf,
-  Flame,
-  Ruler,
+  Armchair,
+  LampFloor,
+  Sofa,
+  TableProperties,
 } from "lucide-react";
 
 import coverImg from "@/assets/cover.jpg";
@@ -64,11 +63,41 @@ type PixTier = {
 };
 
 const PIX_TIERS: PixTier[] = [
-  { id: "sofazinho",  icon: ShoppingCart,    value: 100,  label: "Pé do sofá",         description: "Contribua com parte do sofá que queremos" },
-  { id: "sofamedio",   icon: Ruler,          value: 300, label: "Encosto sofá",       description: "Uma boa contribuição pro nosso sofá" },
-  { id: "sofagande",icon: Leaf,             value: 500, label: "Sofá completo",      description: "Você vai estar na gente todos os dias!" },
-  { id: "sofaplus",  icon: Flame,            value: 800, label: "Sofá + mesa",   description: "Sofá E mesa de centro pra completar" },
-  { id: "sofa360",   icon: Heart,            value: 1200, label: "Décor completa", description: "Sofá, mesa, luminária — o set COMPLETO" },
+  {
+    id: "detalhe",
+    icon: Heart,
+    value: 50,
+    label: "Um detalhe para o lar",
+    description: "Para aqueles pequenos detalhes que, misteriosamente, só aparecem depois da mudança.",
+  },
+  {
+    id: "luz",
+    icon: LampFloor,
+    value: 100,
+    label: "Um cantinho iluminado",
+    description: "Uma ajudinha para iluminar a casa — porque viver no escuro só é romântico no cinema.",
+  },
+  {
+    id: "poltrona",
+    icon: Armchair,
+    value: 150,
+    label: "Um lugar para receber",
+    description: "Para montarmos um cantinho confortável e recebermos vocês sem disputar a única cadeira.",
+  },
+  {
+    id: "sofa",
+    icon: Sofa,
+    value: 250,
+    label: "Um pedacinho do sofá",
+    description: "Um pedacinho do sofá onde vamos maratonar séries e negociar quem fica com o controle.",
+  },
+  {
+    id: "moveis",
+    icon: TableProperties,
+    value: 400,
+    label: "Um móvel mais perto",
+    description: "Uma força e tanto para o próximo móvel — e menos uma caixa fazendo papel de mesa.",
+  },
 ];
 
 const TIER_GRADIENTS = [
@@ -83,6 +112,29 @@ const OPEN_HOUSE_DATE = "2026-08-08";
 const OPEN_HOUSE_TIME = "15:00";
 const OPEN_HOUSE_FALLBACK_TEXT =
   "Casa aberta para celebrar o novo lar, receber pessoas queridas e brindar essa fase com carinho.";
+
+const MONTHS_PT_BR = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+];
+
+function formatEventDate(value: string | null | undefined) {
+  const [year, month, day] = (value ?? OPEN_HOUSE_DATE).split("-").map(Number);
+  const monthLabel = MONTHS_PT_BR[month - 1];
+
+  if (!year || !monthLabel || !day) return "Data a confirmar";
+  return `${String(day).padStart(2, "0")} ${monthLabel} ${year}`;
+}
 
 const localBackgroundPhotoUrls = Object.values(
   import.meta.glob<string>("/src/assets/background-photos/*.{jpg,jpeg,png,webp,avif}", {
@@ -336,7 +388,7 @@ function PublicPage() {
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-foreground/70">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 text-terracotta" />
-                  08 ago 2026
+                  {formatEventDate(event?.event_date)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-terracotta" />
@@ -396,14 +448,17 @@ function PublicPage() {
           {/* ── COTAS PIX ── */}
           <section ref={pixSectionRef} className="px-4 pt-8 pb-8 sm:px-6">
             <div className="mx-auto max-w-5xl">
-              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/45">
-                Contribuições PIX
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/55">
+                Se você quiser nos presentear
               </p>
-              <h2 className="mt-2 text-center font-display text-4xl text-white sm:text-5xl">
-                Já temos tudo em casa
+              <h2 className="mt-2 text-balance text-center font-display text-4xl text-white sm:text-5xl">
+                Um carinho para o nosso novo lar
               </h2>
-              <p className="mt-2 text-center text-sm text-white/55">
-                O que mais precisamos é de dinheiro para comprar o sofá dos nossos sonhos! Escolha uma categoria ou envie o valor que quiser
+              <p className="mx-auto mt-3 max-w-2xl text-pretty text-center text-sm leading-6 text-white/72">
+                A gente já tem os utensílios do dia a dia e, por isso, escolheu não fazer uma
+                lista tradicional. Se você quiser nos presentear, uma contribuição via Pix vai
+                nos ajudar a comprar os móveis que ainda faltam. Mas fique à vontade: sua
+                presença já é o presente mais importante para nós.
               </p>
               <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {PIX_TIERS.map((tier, i) => (
@@ -416,7 +471,7 @@ function PublicPage() {
             <section className="px-4 pb-16 sm:px-6">
               <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-white/6 px-4 py-5 backdrop-blur-sm sm:px-8">
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-white/40">
-                  Ou contribua com qualquer valor
+                  Prefere contribuir com outro valor?
                 </p>
                 <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   {event?.pix_qr_url && (
@@ -680,7 +735,7 @@ function PixTierCard({ tier, index, onClick }: { tier: PixTier; index: number; o
         <p className="mt-1.5 text-[11px] leading-5 text-white/60">{tier.description}</p>
         <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
           <Heart className="h-3 w-3" />
-          Contribuir
+          Escolher esta cota
         </div>
       </div>
     </button>
@@ -720,7 +775,7 @@ function PixTierDialog({
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Que mimo! Obrigada de coração 💚");
+      toast.success("Obrigada pelo carinho! 💚");
       setName("");
       onClose();
     },
@@ -784,7 +839,7 @@ function PixTierDialog({
             className="order-1 sm:order-2 h-12 sm:h-10"
           >
             <Heart className="mr-2 h-4 w-4" />
-            Vou presentear assim!
+            Avisar que vou contribuir
           </Button>
         </DialogFooter>
       </DialogContent>
