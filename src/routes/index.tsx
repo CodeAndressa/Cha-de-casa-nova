@@ -22,6 +22,7 @@ import {
 
 import coverImg from "@/assets/cover.jpg";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
+import { GlowCard } from "@/components/ui/spotlight-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -723,21 +724,27 @@ function PixTierCard({ tier, index, onClick }: { tier: PixTier; index: number; o
     <button
       type="button"
       onClick={onClick}
-      className="group relative overflow-hidden rounded-2xl border border-white/15 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-white/35 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      className="group block h-full w-full rounded-2xl text-left transition-all duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${TIER_GRADIENTS[index]}`} />
-      <div className="relative flex h-full flex-col p-5">
-        <tier.icon className="h-9 w-9 text-white/75" />
-        <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
-          {formatBRL(tier.value)}
-        </span>
-        <h3 className="mt-2 font-display text-xl leading-tight text-white">{tier.label}</h3>
-        <p className="mt-1.5 text-[11px] leading-5 text-white/60">{tier.description}</p>
-        <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
+      <GlowCard
+        glowColor="green"
+        customSize
+        className="h-full w-full overflow-hidden border-white/15 transition-colors duration-300 group-hover:border-white/35 group-hover:shadow-premium"
+      >
+        <div className={`absolute inset-0 bg-gradient-to-br ${TIER_GRADIENTS[index]}`} />
+        <div className="relative flex flex-col">
+          <tier.icon className="h-9 w-9 text-white/75" />
+          <span className="mt-4 inline-block w-fit rounded-full bg-white/18 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white">
+            {formatBRL(tier.value)}
+          </span>
+          <h3 className="mt-2 font-display text-xl leading-tight text-white">{tier.label}</h3>
+          <p className="mt-1.5 text-[11px] leading-5 text-white/60">{tier.description}</p>
+        </div>
+        <div className="relative flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-white/50 transition-colors group-hover:text-white/90">
           <Heart className="h-3 w-3" />
           Escolher esta cota
         </div>
-      </div>
+      </GlowCard>
     </button>
   );
 }
