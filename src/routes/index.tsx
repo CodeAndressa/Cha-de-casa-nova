@@ -323,7 +323,12 @@ function PublicPage() {
               external
               disabled={!event?.whatsapp_phone}
             />
-            <Button size="sm" className="ml-2 rounded-xl px-4" onClick={() => setRsvpOpen(true)}>
+            <Button
+              variant="liquidGlass"
+              size="sm"
+              className="ml-2 rounded-xl px-4"
+              onClick={() => setRsvpOpen(true)}
+            >
               Confirmar
             </Button>
           </nav>
@@ -429,6 +434,7 @@ function PublicPage() {
 
               <div className="mt-6">
                 <Button
+                  variant="liquidGlass"
                   className="h-12 w-full rounded-xl text-base sm:h-11 sm:text-sm"
                   onClick={() => setRsvpOpen(true)}
                 >
@@ -681,7 +687,7 @@ function AddressDialog({
         </DialogHeader>
         <p className="py-2 text-sm leading-6 text-foreground/80">{fullAddress}</p>
         <DialogFooter>
-          <Button asChild className="w-full rounded-xl">
+          <Button asChild variant="liquidGlass" className="w-full rounded-xl">
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
               target="_blank"
@@ -841,6 +847,7 @@ function PixTierDialog({
             Cancelar
           </Button>
           <Button
+            variant="liquidGlass"
             onClick={() => mutation.mutate()}
             disabled={!name.trim() || mutation.isPending}
             className="order-1 sm:order-2 h-12 sm:h-10"
@@ -941,7 +948,11 @@ function RsvpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!name.trim() || mutation.isPending}>
+          <Button
+            variant="liquidGlass"
+            onClick={() => mutation.mutate()}
+            disabled={!name.trim() || mutation.isPending}
+          >
             Confirmar
           </Button>
         </DialogFooter>
@@ -996,6 +1007,7 @@ function RecadoForm() {
           />
         </div>
         <Button
+          variant="liquidGlass"
           className="h-12 w-full rounded-xl text-base sm:h-11 sm:text-sm"
           onClick={() => mutation.mutate()}
           disabled={!name.trim() || !message.trim() || mutation.isPending}
