@@ -451,7 +451,7 @@ function PublicPage() {
         className={`relative z-10 flex h-full flex-col ${view !== "contribuicoes" ? "hidden" : ""}`}
       >
         <SubNav title="Contribuições via PIX" onBack={() => setView("hero")} />
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {/* ── COTAS PIX ── */}
           <section ref={pixSectionRef} className="px-4 pt-8 pb-8 sm:px-6">
             <div className="mx-auto max-w-5xl">
@@ -528,7 +528,7 @@ function PublicPage() {
         className={`relative z-10 flex h-full flex-col ${view !== "recado" ? "hidden" : ""}`}
       >
         <SubNav title="Deixe um recado" onBack={() => setView("hero")} />
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
             <RecadoForm />
           </section>
